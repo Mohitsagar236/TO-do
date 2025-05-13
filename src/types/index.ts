@@ -20,6 +20,10 @@ export interface Task {
   sharedWith?: User[];
   recurrence?: TaskRecurrence;
   timeEntries?: TimeEntry[];
+  isEncrypted?: boolean;
+  encryptionKey?: string;
+  passwordProtected?: boolean;
+  passwordHash?: string;
 }
 
 export interface TimeEntry {
