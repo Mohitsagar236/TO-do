@@ -5,13 +5,21 @@ import { KanbanBoard } from '../components/KanbanBoard';
 import { Calendar } from '../components/Calendar';
 import { PomodoroTimer } from '../components/PomodoroTimer';
 import { TimeTracker } from '../components/TimeTracker';
+import { DashboardSummary } from '../components/DashboardSummary';
+import { UserPreferences } from '../components/UserPreferences';
 import { Button } from '../components/ui/Button';
+import { useUserStore } from '../store/userStore';
 
 function Dashboard() {
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar'>('list');
+  const { preferences } = useUserStore();
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar'>(
+    preferences.defaultView
+  );
 
   return (
     <div className="container mx-auto max-w-7xl">
+      <DashboardSummary />
+      
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold dark:text-white">Dashboard</h1>
         <div className="flex flex-wrap gap-2">
@@ -49,6 +57,7 @@ function Dashboard() {
           </div>
         </div>
         <div className="space-y-6">
+          <UserPreferences />
           <PomodoroTimer />
           <TimeTracker />
         </div>
