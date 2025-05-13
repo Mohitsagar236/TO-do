@@ -1,27 +1,34 @@
 import React from 'react';
+import * as AvatarPrimitive from '@radix-ui/react-avatar';
+import { cn } from '../../lib/utils';
 
 interface AvatarProps {
   src?: string;
   fallback: string;
   className?: string;
+  alt?: string;
 }
 
-export function Avatar({ src, fallback, className = '' }: AvatarProps) {
+export function Avatar({ src, fallback, className, alt }: AvatarProps) {
   return (
-    <div 
-      className={`relative inline-block rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 ${className}`}
-    >
-      {src ? (
-        <img
-          src={src}
-          alt="Avatar"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 font-medium">
-          {fallback.toUpperCase()}
-        </div>
+    <AvatarPrimitive.Root
+      className={cn(
+        'relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full',
+        className
       )}
-    </div>
+    >
+      <AvatarPrimitive.Image
+        src={src}
+        alt={alt || fallback}
+        className="h-full w-full object-cover"
+      />
+      <AvatarPrimitive.Fallback
+        className="flex h-full w-full items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800"
+      >
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+          {fallback.slice(0, 2).toUpperCase()}
+        </span>
+      </AvatarPrimitive.Fallback>
+    </AvatarPrimitive.Root>
   );
 }
