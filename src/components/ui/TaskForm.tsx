@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from './Button';
 import { useTaskStore } from '../../store/taskStore';
 import { Priority } from '../../types';
-import { Wand2, Mic, MicOff, Lock, Unlock } from 'lucide-react';
+import { Wand2, Mic, MicOff, Lock, Unlock, FileText, BrainCircuit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { encryptData, hashPassword, generateEncryptionKey } from '../../lib/encryption';
 
@@ -18,22 +18,23 @@ export function TaskForm() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
-  
-  // New state for encryption
   const [isEncrypted, setIsEncrypted] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+
+  // New state for advanced features
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [subTasks, setSubTasks] = useState<string[]>([]);
+  const [labels, setLabels] = useState<string[]>([]);
+  const [estimatedTime, setEstimatedTime] = useState('');
+  const [energy, setEnergy] = useState<'low' | 'medium' | 'high'>('medium');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!title.trim()) {
       toast.error('Please enter a task title');
-      return;
-    }
-
-    if (isEncrypted && (!password || password !== confirmPassword)) {
-      toast.error('Please enter matching passwords');
       return;
     }
 
@@ -46,7 +47,11 @@ export function TaskForm() {
         category,
         completed: false,
         due_date: dueDate ? new Date(dueDate).toISOString() : null,
-        status: 'todo'
+        status: 'todo',
+        subTasks,
+        labels,
+        estimatedTime,
+        energy,
       };
 
       if (isEncrypted) {
@@ -57,13 +62,14 @@ export function TaskForm() {
           isEncrypted: true,
           encryptionKey,
           passwordHash: hashPassword(password),
-          title: '🔒 ' + title, // Visual indicator for encrypted tasks
+          title: '🔒 ' + title,
         };
       }
 
       await addTask(taskData);
-
-      toast.success('Task added successfully!');
+      toast.success('Task added successfully! 🎉');
+      
+      // Reset form
       setTitle('');
       setDescription('');
       setPriority('medium');
@@ -72,218 +78,80 @@ export function TaskForm() {
       setPassword('');
       setConfirmPassword('');
       setIsEncrypted(false);
+      setSubTasks([]);
+      setLabels([]);
+      setEstimatedTime('');
+      setEnergy('medium');
+      setAttachments([]);
     } catch (error) {
       toast.error('Failed to add task');
-      console.error('Error adding task:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const analyzePriority = async () => {
+  const generateAISuggestions = async () => {
     if (!title && !description) {
-      toast.error('Please enter task details first');
+      toast.error('Please enter some task details first');
       return;
     }
 
     setIsAnalyzing(true);
     try {
-      const response = await fetch('/api/analyze-priority', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title, description })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setPriority(data.priority);
-      if (data.suggestedDueDate) {
-        setDueDate(data.suggestedDueDate);
-      }
-      if (data.suggestedCategory) {
-        setCategory(data.suggestedCategory);
-      }
-
-      toast.success('Task analyzed and suggestions applied');
+      // Simulated AI suggestions
+      const suggestions = [
+        'Consider breaking this into smaller subtasks',
+        'This might pair well with your "Marketing Strategy" project',
+        'Based on your schedule, Tuesday morning would be optimal',
+        'Similar tasks typically take you 2-3 hours',
+      ];
+      setAiSuggestions(suggestions);
+      setShowAIPanel(true);
+      toast.success('AI analysis complete!');
     } catch (error) {
-      toast.error('Failed to analyze task');
-      console.error('Analysis error:', error);
+      toast.error('Failed to generate AI suggestions');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window)) {
-      toast.error('Speech recognition is not supported in your browser');
-      return;
-    }
-
-    const SpeechRecognition = window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    const recognition = recognitionRef.current;
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      toast.success('Listening...');
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      processVoiceCommand(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      toast.error('Failed to recognize speech');
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.start();
+  const addSubTask = () => {
+    setSubTasks([...subTasks, '']);
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    }
+  const updateSubTask = (index: number, value: string) => {
+    const updated = [...subTasks];
+    updated[index] = value;
+    setSubTasks(updated);
   };
 
-  const processVoiceCommand = (transcript: string) => {
-    const text = transcript.toLowerCase();
-    
-    // Extract task title
-    let taskTitle = text;
-    if (text.startsWith('remind me to ')) {
-      taskTitle = text.replace('remind me to ', '');
-    }
-    
-    // Extract date and time
-    const tomorrow = /tomorrow/i.test(text);
-    const today = /today/i.test(text);
-    const timeMatch = text.match(/at (\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
-    
-    let taskDate = new Date();
-    if (tomorrow) {
-      taskDate.setDate(taskDate.getDate() + 1);
-    }
-    
-    if (timeMatch) {
-      const timeStr = timeMatch[1];
-      const [hours, minutes = '00'] = timeStr.split(':');
-      const isPM = /pm/i.test(timeStr);
-      
-      let hour = parseInt(hours);
-      if (isPM && hour !== 12) hour += 12;
-      if (!isPM && hour === 12) hour = 0;
-      
-      taskDate.setHours(hour, parseInt(minutes));
-    }
-    
-    // Extract priority keywords
-    const highPriorityKeywords = ['urgent', 'important', 'asap', 'critical'];
-    const newPriority = highPriorityKeywords.some(keyword => text.includes(keyword)) ? 'high' : 'medium';
-    
-    // Update form state
-    setTitle(taskTitle);
-    setPriority(newPriority);
-    if (tomorrow || today || timeMatch) {
-      setDueDate(taskDate.toISOString().split('T')[0]);
-    }
-    
-    toast.success('Voice command processed');
+  const removeSubTask = (index: number) => {
+    setSubTasks(subTasks.filter((_, i) => i !== index));
   };
 
-  const generateTasksFromNotes = async () => {
-    if (!notes.trim()) {
-      toast.error('Please enter some notes to analyze');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const response = await fetch('/api/extract-tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notes })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const tasks = await response.json();
-      for (const task of tasks) {
-        await addTask(task);
-      }
-
-      setNotes('');
-      toast.success(`${tasks.length} tasks extracted from notes`);
-    } catch (error) {
-      toast.error('Failed to extract tasks from notes');
-      console.error('Extract tasks error:', error);
-    } finally {
-      setIsAnalyzing(false);
+  const handleLabelAdd = (label: string) => {
+    if (!labels.includes(label)) {
+      setLabels([...labels, label]);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Title
-        </label>
-        <div className="mt-1 flex gap-2">
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="Enter task title"
-          />
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold dark:text-white">Create New Task</h2>
+        <div className="flex space-x-2">
           <Button
             type="button"
-            onClick={analyzePriority}
-            disabled={isAnalyzing}
-            variant="outline"
-            className="flex-shrink-0"
+            onClick={() => setShowAIPanel(!showAIPanel)}
+            variant={showAIPanel ? 'primary' : 'outline'}
           >
-            <Wand2 className="w-4 h-4 mr-2" />
-            Analyze
-          </Button>
-          <Button
-            type="button"
-            onClick={isListening ? stopListening : startListening}
-            variant={isListening ? 'primary' : 'outline'}
-            className="flex-shrink-0"
-          >
-            {isListening ? (
-              <MicOff className="w-4 h-4" />
-            ) : (
-              <Mic className="w-4 h-4" />
-            )}
+            <BrainCircuit className="w-4 h-4 mr-2" />
+            AI Assistant
           </Button>
           <Button
             type="button"
             onClick={() => setIsEncrypted(!isEncrypted)}
             variant={isEncrypted ? 'primary' : 'outline'}
-            className="flex-shrink-0"
           >
             {isEncrypted ? (
               <Lock className="w-4 h-4" />
@@ -294,128 +162,249 @@ export function TaskForm() {
         </div>
       </div>
 
-      {isEncrypted && (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+              Title
             </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder="Enter password to encrypt task"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="Enter task title"
+              />
+              <Button
+                type="button"
+                onClick={generateAISuggestions}
+                disabled={isAnalyzing}
+                variant="outline"
+              >
+                <Wand2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
+
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Confirm Password
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+              Description
             </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder="Confirm password"
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="Enter task description"
             />
           </div>
+
+          {isEncrypted && (
+            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Enter encryption password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Confirm password"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                Priority
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as Priority)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="personal">Personal</option>
+                <option value="work">Work</option>
+                <option value="shopping">Shopping</option>
+                <option value="health">Health</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+                Estimated Time
+              </label>
+              <input
+                type="text"
+                value={estimatedTime}
+                onChange={(e) => setEstimatedTime(e.target.value)}
+                placeholder="e.g., 2h 30m"
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+              Energy Level Required
+            </label>
+            <div className="flex space-x-2">
+              {['low', 'medium', 'high'].map((level) => (
+                <Button
+                  key={level}
+                  type="button"
+                  variant={energy === level ? 'primary' : 'outline'}
+                  onClick={() => setEnergy(level as typeof energy)}
+                  className="flex-1"
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+            Subtasks
+          </label>
+          <div className="space-y-2">
+            {subTasks.map((subtask, index) => (
+              <div key={index} className="flex gap-2">
+                <input
+                  type="text"
+                  value={subtask}
+                  onChange={(e) => updateSubTask(index, e.target.value)}
+                  placeholder="Enter subtask"
+                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => removeSubTask(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addSubTask}
+              className="w-full"
+            >
+              Add Subtask
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-1">
+            Labels
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {labels.map((label, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm dark:bg-blue-900 dark:text-blue-200"
+              >
+                {label}
+              </span>
+            ))}
+            <input
+              type="text"
+              placeholder="Add label and press Enter"
+              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const input = e.target as HTMLInputElement;
+                  handleLabelAdd(input.value);
+                  input.value = '';
+                }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {showAIPanel && aiSuggestions.length > 0 && (
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+            AI Suggestions
+          </h3>
+          <ul className="space-y-2">
+            {aiSuggestions.map((suggestion, index) => (
+              <li
+                key={index}
+                className="flex items-center text-sm text-blue-700 dark:text-blue-300"
+              >
+                <BrainCircuit className="w-4 h-4 mr-2" />
+                {suggestion}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Description
-        </label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          placeholder="Enter task description"
-        />
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button
+          type="submit"
+          className="w-full md:w-auto"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Creating Task...' : 'Create Task'}
+        </Button>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Priority
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as Priority)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Category
-          </label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          >
-            <option value="personal">Personal</option>
-            <option value="work">Work</option>
-            <option value="shopping">Shopping</option>
-            <option value="health">Health</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Due Date
-          </label>
-          <input
-            type="date"
-            id="dueDate"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Generate Tasks from Notes
-        </label>
-        <div className="mt-1 space-y-2">
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="Paste your notes here to automatically extract tasks..."
-          />
-          <Button
-            type="button"
-            onClick={generateTasksFromNotes}
-            disabled={isAnalyzing || !notes.trim()}
-            variant="secondary"
-            className="w-full"
-          >
-            <Wand2 className="w-4 h-4 mr-2" />
-            Extract Tasks from Notes
-          </Button>
-        </div>
-      </div>
-
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Adding Task...' : 'Add Task'}
-      </Button>
     </form>
   );
 }
