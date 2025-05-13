@@ -11,11 +11,13 @@ import Sidebar from './components/Sidebar';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { ProductivityAnalytics } from './components/ProductivityAnalytics';
 import { TeamPanel } from './components/TeamPanel';
+import { SubscriptionBanner } from './components/SubscriptionBanner';
 
 // Pages
 import Dashboard from './pages/Dashboard';
 import AllTasks from './pages/AllTasks';
 import Login from './pages/Login';
+import Pricing from './pages/Pricing';
 
 function App() {
   const { darkMode, user } = useUserStore();
@@ -42,6 +44,7 @@ function App() {
         )}
         <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
           <Header />
+          {user && <SubscriptionBanner />}
           <main className="flex-1 overflow-y-auto p-4 lg:p-6">
             <Routes>
               <Route
@@ -63,6 +66,10 @@ function App() {
               <Route
                 path="/team"
                 element={user ? <TeamPanel /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/pricing"
+                element={user ? <Pricing /> : <Navigate to="/login" replace />}
               />
             </Routes>
           </main>

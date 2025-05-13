@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, CheckSquare, BarChart2, Users, Settings } from 'lucide-react';
+import { Menu, X, LayoutDashboard, CheckSquare, BarChart2, Users, Settings, CreditCard } from 'lucide-react';
 import { Button } from './ui/Button';
+import { useUserStore } from '../store/userStore';
 
 const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { subscription } = useUserStore();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -16,6 +18,7 @@ const Sidebar = () => {
     { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
     { path: '/analytics', icon: BarChart2, label: 'Analytics' },
     { path: '/team', icon: Users, label: 'Team' },
+    { path: '/pricing', icon: CreditCard, label: 'Subscription' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -56,6 +59,11 @@ const Sidebar = () => {
               >
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.label}
+                {item.path === '/pricing' && subscription?.plan !== 'team' && (
+                  <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-100 text-blue-600 rounded-full dark:bg-blue-900 dark:text-blue-200">
+                    {subscription?.plan || 'Free'}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
