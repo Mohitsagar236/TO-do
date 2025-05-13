@@ -1,12 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { TaskList } from '../components/TaskList';
+import { useTaskStore } from '../store/taskStore';
+import { Button } from '../components/ui/Button';
 
 function AllTasks() {
+  const tasks = useTaskStore((state) => state.tasks);
+  const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
+  
+  const filteredTasks = tasks.filter((task) => {
+    if (filter === 'completed') return task.completed;
+    if (filter === 'active') return !task.completed;
+    return true;
+  });
+
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-4 dark:text-white">All Tasks</h1>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-300">Your tasks will appear here.</p>
+    <div className="container mx-auto max-w-4xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold dark:text-white">All Tasks</h1>
+        <div className="flex space-x-2">
+          <Button
+            variant={filter === 'all' ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('all')}
+          >
+            All
+          </Button>
+          <Button
+            variant={filter === 'active' ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('active')}
+          >
+            Active
+          </Button>
+          <Button
+            variant={filter === 'completed' ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('completed')}
+          >
+            Completed
+          </Button>
+        </div>
       </div>
+      
+      <TaskList />
     </div>
   );
 }
