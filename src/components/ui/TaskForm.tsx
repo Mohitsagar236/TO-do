@@ -89,9 +89,16 @@ export function TaskForm() {
     try {
       const response = await fetch('/api/analyze-priority', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ title, description })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       setPriority(data.priority);
@@ -105,6 +112,7 @@ export function TaskForm() {
       toast.success('Task analyzed and suggestions applied');
     } catch (error) {
       toast.error('Failed to analyze task');
+      console.error('Analysis error:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -209,9 +217,16 @@ export function TaskForm() {
     try {
       const response = await fetch('/api/extract-tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ notes })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const tasks = await response.json();
       for (const task of tasks) {
@@ -222,6 +237,7 @@ export function TaskForm() {
       toast.success(`${tasks.length} tasks extracted from notes`);
     } catch (error) {
       toast.error('Failed to extract tasks from notes');
+      console.error('Extract tasks error:', error);
     } finally {
       setIsAnalyzing(false);
     }

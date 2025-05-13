@@ -158,19 +158,26 @@ export const useTaskStore = create<TaskStore>()(
         const user = useUserStore.getState().user;
         if (!user) return;
 
-        const { data, error } = await supabase.from('tasks').insert([
-          {
-            title: task.title,
-            description: task.description,
-            completed: task.completed,
-            due_date: task.dueDate?.toISOString(),
-            priority: task.priority,
-            category: task.category,
-            user_id: user.id,
-          },
-        ]).select().single();
+        const { data, error } = await supabase
+          .from('tasks')
+          .insert([
+            {
+              title: task.title,
+              description: task.description,
+              completed: task.completed,
+              due_date: task.dueDate?.toISOString(),
+              priority: task.priority,
+              category: task.category,
+              user_id: user.id,
+            },
+          ])
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
 
         set((state) => ({
           tasks: [
@@ -184,7 +191,10 @@ export const useTaskStore = create<TaskStore>()(
         }));
       },
       deleteTask: async (id) => {
-        const { error } = await supabase.from('tasks').delete().match({ id });
+        const { error } = await supabase
+          .from('tasks')
+          .delete()
+          .match({ id });
         
         if (error) throw error;
 
