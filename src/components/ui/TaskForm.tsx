@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from './Button';
 import { useTaskStore } from '../../store/taskStore';
 import { Priority } from '../../types';
-import { Wand2, Mic, MicOff, Lock, Unlock, FileText, BrainCircuit } from 'lucide-react';
+import { Wand2, Mic, MicOff, Lock, Unlock, FileText, BrainCircuit, Calendar, Clock, Tag, CheckSquare, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { encryptData, hashPassword, generateEncryptionKey } from '../../lib/encryption';
 
@@ -24,12 +24,16 @@ export function TaskForm() {
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [showAIPanel, setShowAIPanel] = useState(false);
 
-  // New state for advanced features
+  // Advanced features
   const [attachments, setAttachments] = useState<File[]>([]);
   const [subTasks, setSubTasks] = useState<string[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
   const [estimatedTime, setEstimatedTime] = useState('');
   const [energy, setEnergy] = useState<'low' | 'medium' | 'high'>('medium');
+  const [recurrence, setRecurrence] = useState('');
+  const [dependencies, setDependencies] = useState<string[]>([]);
+  const [collaborators, setCollaborators] = useState<string[]>([]);
+  const [customFields, setCustomFields] = useState<{ key: string; value: string }[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +56,10 @@ export function TaskForm() {
         labels,
         estimatedTime,
         energy,
+        recurrence,
+        dependencies,
+        collaborators,
+        customFields,
       };
 
       if (isEncrypted) {
@@ -83,6 +91,10 @@ export function TaskForm() {
       setEstimatedTime('');
       setEnergy('medium');
       setAttachments([]);
+      setRecurrence('');
+      setDependencies([]);
+      setCollaborators([]);
+      setCustomFields([]);
     } catch (error) {
       toast.error('Failed to add task');
     } finally {
@@ -98,12 +110,12 @@ export function TaskForm() {
 
     setIsAnalyzing(true);
     try {
-      // Simulated AI suggestions
       const suggestions = [
         'Consider breaking this into smaller subtasks',
-        'This might pair well with your "Marketing Strategy" project',
+        'This task might benefit from team collaboration',
         'Based on your schedule, Tuesday morning would be optimal',
         'Similar tasks typically take you 2-3 hours',
+        'This aligns with your "Q1 Goals" project',
       ];
       setAiSuggestions(suggestions);
       setShowAIPanel(true);
@@ -135,10 +147,24 @@ export function TaskForm() {
     }
   };
 
+  const addCustomField = () => {
+    setCustomFields([...customFields, { key: '', value: '' }]);
+  };
+
+  const updateCustomField = (index: number, key: string, value: string) => {
+    const updated = [...customFields];
+    updated[index] = { key, value };
+    setCustomFields(updated);
+  };
+
+  const removeCustomField = (index: number) => {
+    setCustomFields(customFields.filter((_, i) => i !== index));
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold dark:text-white">Create New Task</h2>
+        <h2 className="text-xl font-semibold dark:text-white">Create Task</h2>
         <div className="flex space-x-2">
           <Button
             type="button"
@@ -153,21 +179,16 @@ export function TaskForm() {
             onClick={() => setIsEncrypted(!isEncrypted)}
             variant={isEncrypted ? 'primary' : 'outline'}
           >
-            {isEncrypted ? (
-              <Lock className="w-4 h-4" />
-            ) : (
-              <Unlock className="w-4 h-4" />
-            )}
+            {isEncrypted ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Basic Information */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-              Title
-            </label>
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">Title</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -188,9 +209,7 @@ export function TaskForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-              Description
-            </label>
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -200,12 +219,11 @@ export function TaskForm() {
             />
           </div>
 
+          {/* Encryption Section */}
           {isEncrypted && (
             <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div>
-                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                  Password
-                </label>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">Password</label>
                 <input
                   type="password"
                   value={password}
@@ -215,9 +233,7 @@ export function TaskForm() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                  Confirm Password
-                </label>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">Confirm Password</label>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -230,12 +246,11 @@ export function TaskForm() {
           )}
         </div>
 
+        {/* Task Details */}
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                Priority
-              </label>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
@@ -248,9 +263,7 @@ export function TaskForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                Category
-              </label>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -260,17 +273,17 @@ export function TaskForm() {
                 <option value="work">Work</option>
                 <option value="shopping">Shopping</option>
                 <option value="health">Health</option>
+                <option value="education">Education</option>
+                <option value="finance">Finance</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                Due Date
-              </label>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">Due Date</label>
               <input
-                type="date"
+                type="datetime-local"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -278,9 +291,7 @@ export function TaskForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                Estimated Time
-              </label>
+              <label className="block text-sm font-medium dark:text-gray-300 mb-1">Estimated Time</label>
               <input
                 type="text"
                 value={estimatedTime}
@@ -292,9 +303,22 @@ export function TaskForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-              Energy Level Required
-            </label>
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">Recurrence</label>
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence(e.target.value)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              <option value="">No recurrence</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium dark:text-gray-300 mb-1">Energy Level Required</label>
             <div className="flex space-x-2">
               {['low', 'medium', 'high'].map((level) => (
                 <Button
@@ -312,11 +336,10 @@ export function TaskForm() {
         </div>
       </div>
 
+      {/* Subtasks Section */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-            Subtasks
-          </label>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-1">Subtasks</label>
           <div className="space-y-2">
             {subTasks.map((subtask, index) => (
               <div key={index} className="flex gap-2">
@@ -342,15 +365,15 @@ export function TaskForm() {
               onClick={addSubTask}
               className="w-full"
             >
+              <CheckSquare className="w-4 h-4 mr-2" />
               Add Subtask
             </Button>
           </div>
         </div>
 
+        {/* Labels Section */}
         <div>
-          <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-            Labels
-          </label>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-1">Labels</label>
           <div className="flex flex-wrap gap-2">
             {labels.map((label, index) => (
               <span
@@ -375,8 +398,49 @@ export function TaskForm() {
             />
           </div>
         </div>
+
+        {/* Custom Fields Section */}
+        <div>
+          <label className="block text-sm font-medium dark:text-gray-300 mb-1">Custom Fields</label>
+          <div className="space-y-2">
+            {customFields.map((field, index) => (
+              <div key={index} className="flex gap-2">
+                <input
+                  type="text"
+                  value={field.key}
+                  onChange={(e) => updateCustomField(index, e.target.value, field.value)}
+                  placeholder="Field name"
+                  className="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <input
+                  type="text"
+                  value={field.value}
+                  onChange={(e) => updateCustomField(index, field.key, e.target.value)}
+                  placeholder="Field value"
+                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => removeCustomField(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addCustomField}
+              className="w-full"
+            >
+              Add Custom Field
+            </Button>
+          </div>
+        </div>
       </div>
 
+      {/* AI Suggestions Panel */}
       {showAIPanel && aiSuggestions.length > 0 && (
         <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
@@ -396,6 +460,7 @@ export function TaskForm() {
         </div>
       )}
 
+      {/* Submit Button */}
       <div className="flex justify-end space-x-2 pt-4">
         <Button
           type="submit"
