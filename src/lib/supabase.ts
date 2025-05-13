@@ -15,13 +15,19 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   },
   global: {
+    headers: {
+      'apikey': supabaseAnonKey
+    },
     fetch: (url, options) => {
+      const headers = {
+        ...options?.headers,
+        'apikey': supabaseAnonKey,
+        'Cache-Control': 'no-store'
+      };
+
       return fetch(url, {
         ...options,
-        headers: {
-          ...options?.headers,
-          'Cache-Control': 'no-store'
-        }
+        headers
       });
     }
   }
