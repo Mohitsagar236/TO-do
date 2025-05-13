@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, CheckSquare, BarChart2, Users, Settings, CreditCard } from 'lucide-react';
+import { Menu, X, LayoutDashboard, CheckSquare, BarChart2, Users, CreditCard } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useUserStore } from '../store/userStore';
 
@@ -15,7 +15,6 @@ const Sidebar = () => {
     { path: '/analytics', icon: BarChart2, label: 'Analytics' },
     { path: '/team', icon: Users, label: 'Team' },
     { path: '/pricing', icon: CreditCard, label: 'Subscription' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
