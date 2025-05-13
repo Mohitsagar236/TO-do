@@ -9,6 +9,8 @@ import { useOfflineStore } from './store/offlineStore';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { ProductivityAnalytics } from './components/ProductivityAnalytics';
+import { TeamPanel } from './components/TeamPanel';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -53,6 +55,14 @@ function App() {
               <Route
                 path="/tasks"
                 element={user ? <AllTasks /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/analytics"
+                element={user ? <ProductivityAnalytics /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/team"
+                element={user ? <TeamPanel /> : <Navigate to="/login" replace />}
               />
             </Routes>
           </main>

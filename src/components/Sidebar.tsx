@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, CheckSquare } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, LayoutDashboard, CheckSquare, BarChart2, Users, Settings } from 'lucide-react';
 import { Button } from './ui/Button';
 
 const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  const menuItems = [
+    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
+    { path: '/analytics', icon: BarChart2, label: 'Analytics' },
+    { path: '/team', icon: Users, label: 'Team' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+  ];
 
   return (
     <>
@@ -32,27 +41,27 @@ const Sidebar = () => {
             TaskMaster
           </h1>
           <nav className="space-y-2">
-            <Link 
-              to="/" 
-              className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <LayoutDashboard className="w-5 h-5 mr-3" />
-              Dashboard
-            </Link>
-            <Link 
-              to="/tasks" 
-              className="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <CheckSquare className="w-5 h-5 mr-3" />
-              All Tasks
-            </Link>
+            {menuItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className={`
+                  flex items-center px-4 py-3 rounded-lg transition-colors duration-200
+                  ${location.pathname === item.path
+                    ? 'bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-400'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
+                  }
+                `}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
       </aside>
 
-      {/* Overlay for mobile */}
       {isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
