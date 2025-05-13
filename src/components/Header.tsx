@@ -32,21 +32,23 @@ export default function Header() {
             {darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </Button>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <User size={18} />
-              <span className="text-sm font-medium">
-                {user?.name || 'Guest User'}
-              </span>
-            </div>
             {user && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="w-10"
-              >
-                <LogOut size={18} />
-              </Button>
+              <>
+                <div className="flex items-center space-x-2">
+                  <User size={18} className="text-gray-600 dark:text-gray-300" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    {user.name}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="w-10"
+                >
+                  <LogOut size={18} />
+                </Button>
+              </>
             )}
           </div>
         </div>
