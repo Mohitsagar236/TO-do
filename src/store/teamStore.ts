@@ -72,11 +72,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
             user_id,
             role,
             joined_at,
-            user:user_id (
+            team_member_users!inner (
               id,
               email,
-              raw_user_meta_data->name,
-              raw_user_meta_data->avatar_url
+              name,
+              avatar_url
             )
           )
         `)
@@ -90,10 +90,10 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           createdAt: new Date(team.created_at),
           members: team.team_members.map((member: any) => ({
             id: member.id,
-            name: member.user.raw_user_meta_data.name,
-            email: member.user.email,
+            name: member.team_member_users.name || member.team_member_users.email.split('@')[0],
+            email: member.team_member_users.email,
             role: member.role,
-            avatarUrl: member.user.raw_user_meta_data.avatar_url,
+            avatarUrl: member.team_member_users.avatar_url,
             joinedAt: new Date(member.joined_at),
           })),
         })),
@@ -146,9 +146,8 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
 
   inviteMember: async (teamId, email, role) => {
     try {
-      // Get user from auth.users instead of users table
       const { data: userData, error: userError } = await supabase
-        .from('auth.users')
+        .from('team_member_users')
         .select('id')
         .eq('email', email)
         .single();
@@ -213,10 +212,10 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         .from('team_activities')
         .select(`
           *,
-          user:user_id (
+          team_member_users!inner (
             id,
-            raw_user_meta_data->name,
-            raw_user_meta_data->avatar_url
+            name,
+            avatar_url
           )
         `)
         .eq('team_id', teamId)
@@ -229,9 +228,9 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         activities: data.map((activity: any) => ({
           id: activity.id,
           user: {
-            id: activity.user.id,
-            name: activity.user.raw_user_meta_data.name,
-            avatarUrl: activity.user.raw_user_meta_data.avatar_url,
+            id: activity.team_member_users.id,
+            name: activity.team_member_users.name,
+            avatarUrl: activity.team_member_users.avatar_url,
           },
           action: activity.action,
           entityType: activity.entity_type,
