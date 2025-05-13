@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { UserProgress, Badge, LeaderboardEntry } from '../types';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from './userStore';
+import { useOfflineStore } from './offlineStore';
 import confetti from 'canvas-confetti';
 
 interface ProgressStore {
@@ -50,6 +51,26 @@ const BADGES: Badge[] = [
 
 const calculateLevel = (xp: number): number => {
   return Math.floor(Math.sqrt(xp / 100)) + 1;
+};
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // Start with 1 second delay
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  retries = MAX_RETRIES,
+  delay = RETRY_DELAY
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries === 0) throw error;
+    await wait(delay);
+    return retryWithBackoff(fn, retries - 1, delay * 2);
+  }
 };
 
 export const useProgressStore = create<ProgressStore>()(
@@ -107,14 +128,27 @@ export const useProgressStore = create<ProgressStore>()(
       },
 
       fetchLeaderboard: async () => {
-        try {
-          const { data, error } = await supabase
-            .from('user_progress_with_users')
-            .select('*')
-            .order('xp', { ascending: false })
-            .limit(10);
+        // Check if we're offline
+        const isOffline = useOfflineStore.getState().isOffline;
+        if (isOffline) {
+          set({ error: 'Cannot fetch leaderboard while offline' });
+          return;
+        }
 
-          if (error) throw error;
+        try {
+          const fetchLeaderboardData = async () => {
+            const { data, error } = await supabase
+              .from('user_progress_with_users')
+              .select('*')
+              .order('xp', { ascending: false })
+              .limit(10);
+
+            if (error) throw error;
+
+            return data;
+          };
+
+          const data = await retryWithBackoff(fetchLeaderboardData);
 
           const leaderboard = data.map((entry, index) => ({
             userId: entry.user_id,
@@ -128,7 +162,8 @@ export const useProgressStore = create<ProgressStore>()(
           set({ leaderboard, error: null });
         } catch (err) {
           console.error('Error fetching leaderboard:', err);
-          set({ error: 'Failed to fetch leaderboard' });
+          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch leaderboard';
+          set({ error: errorMessage });
         }
       },
 
