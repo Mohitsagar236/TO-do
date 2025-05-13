@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import { Button } from './Button';
 import { useTaskStore } from '../../store/taskStore';
 import { Priority } from '../../types';
-import { Wand2, Mic, MicOff } from 'lucide-react';
+import { Wand2, Mic, MicOff, Lock, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { encryptData, hashPassword, generateEncryptionKey } from '../../lib/encryption';
 
 export function TaskForm() {
   const addTask = useTaskStore((state) => state.addTask);
@@ -17,6 +18,11 @@ export function TaskForm() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  
+  // New state for encryption
+  const [isEncrypted, setIsEncrypted] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,16 +32,35 @@ export function TaskForm() {
       return;
     }
 
+    if (isEncrypted && (!password || password !== confirmPassword)) {
+      toast.error('Please enter matching passwords');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      await addTask({
+      let taskData = {
         title,
         description,
         priority,
         category,
         completed: false,
         dueDate: dueDate ? new Date(dueDate) : undefined,
-      });
+      };
+
+      if (isEncrypted) {
+        const encryptionKey = generateEncryptionKey();
+        const encryptedData = encryptData(taskData, encryptionKey);
+        taskData = {
+          ...taskData,
+          isEncrypted: true,
+          encryptionKey,
+          passwordHash: hashPassword(password),
+          title: '🔒 ' + title, // Visual indicator for encrypted tasks
+        };
+      }
+
+      await addTask(taskData);
 
       toast.success('Task added successfully!');
       setTitle('');
@@ -43,6 +68,9 @@ export function TaskForm() {
       setPriority('medium');
       setCategory('personal');
       setDueDate('');
+      setPassword('');
+      setConfirmPassword('');
+      setIsEncrypted(false);
     } catch (error) {
       toast.error('Failed to add task');
       console.error('Error adding task:', error);
@@ -236,8 +264,51 @@ export function TaskForm() {
               <Mic className="w-4 h-4" />
             )}
           </Button>
+          <Button
+            type="button"
+            onClick={() => setIsEncrypted(!isEncrypted)}
+            variant={isEncrypted ? 'primary' : 'outline'}
+            className="flex-shrink-0"
+          >
+            {isEncrypted ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <Unlock className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </div>
+
+      {isEncrypted && (
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="Enter password to encrypt task"
+            />
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="Confirm password"
+            />
+          </div>
+        </div>
+      )}
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
