@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from './Button';
 import { useTaskStore } from '../../store/taskStore';
 import { Priority } from '../../types';
-import { Wand2 } from 'lucide-react';
+import { Wand2, Mic, MicOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function TaskForm() {
@@ -15,6 +15,8 @@ export function TaskForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notes, setNotes] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +82,95 @@ export function TaskForm() {
     }
   };
 
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      toast.error('Speech recognition is not supported in your browser');
+      return;
+    }
+
+    const SpeechRecognition = window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    const recognition = recognitionRef.current;
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast.success('Listening...');
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      processVoiceCommand(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      toast.error('Failed to recognize speech');
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const processVoiceCommand = (transcript: string) => {
+    const text = transcript.toLowerCase();
+    
+    // Extract task title
+    let taskTitle = text;
+    if (text.startsWith('remind me to ')) {
+      taskTitle = text.replace('remind me to ', '');
+    }
+    
+    // Extract date and time
+    const tomorrow = /tomorrow/i.test(text);
+    const today = /today/i.test(text);
+    const timeMatch = text.match(/at (\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
+    
+    let taskDate = new Date();
+    if (tomorrow) {
+      taskDate.setDate(taskDate.getDate() + 1);
+    }
+    
+    if (timeMatch) {
+      const timeStr = timeMatch[1];
+      const [hours, minutes = '00'] = timeStr.split(':');
+      const isPM = /pm/i.test(timeStr);
+      
+      let hour = parseInt(hours);
+      if (isPM && hour !== 12) hour += 12;
+      if (!isPM && hour === 12) hour = 0;
+      
+      taskDate.setHours(hour, parseInt(minutes));
+    }
+    
+    // Extract priority keywords
+    const highPriorityKeywords = ['urgent', 'important', 'asap', 'critical'];
+    const newPriority = highPriorityKeywords.some(keyword => text.includes(keyword)) ? 'high' : 'medium';
+    
+    // Update form state
+    setTitle(taskTitle);
+    setPriority(newPriority);
+    if (tomorrow || today || timeMatch) {
+      setDueDate(taskDate.toISOString().split('T')[0]);
+    }
+    
+    toast.success('Voice command processed');
+  };
+
   const generateTasksFromNotes = async () => {
     if (!notes.trim()) {
       toast.error('Please enter some notes to analyze');
@@ -132,6 +223,18 @@ export function TaskForm() {
           >
             <Wand2 className="w-4 h-4 mr-2" />
             Analyze
+          </Button>
+          <Button
+            type="button"
+            onClick={isListening ? stopListening : startListening}
+            variant={isListening ? 'primary' : 'outline'}
+            className="flex-shrink-0"
+          >
+            {isListening ? (
+              <MicOff className="w-4 h-4" />
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </div>
