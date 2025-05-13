@@ -37,7 +37,7 @@ export function ProgressDisplay() {
       <div className="flex items-center space-x-2">
         <Zap className="w-5 h-5 text-yellow-500" />
         <span className="font-medium dark:text-white">
-          {progress.streakDays} day streak
+          {progress.streakDays || 0} day streak
         </span>
       </div>
 
@@ -45,10 +45,10 @@ export function ProgressDisplay() {
       <div>
         <h3 className="text-lg font-semibold mb-3 dark:text-white flex items-center">
           <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
-          Badges ({progress.badges?.length ?? 0})
+          Badges ({(progress.badges || []).length})
         </h3>
         <div className="grid grid-cols-2 gap-4">
-          {progress.badges?.map((badge) => (
+          {(progress.badges || []).map((badge) => (
             <div
               key={badge.id}
               className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
@@ -72,7 +72,7 @@ export function ProgressDisplay() {
           Leaderboard
         </h3>
         <div className="space-y-2">
-          {(leaderboard ?? []).map((entry) => (
+          {(leaderboard || []).map((entry) => (
             <div
               key={entry.userId}
               className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
