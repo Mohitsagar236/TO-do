@@ -68,7 +68,7 @@ export const useProgressStore = create<ProgressStore>()(
           }
 
           const { data, error } = await supabase
-            .from('user_progress')
+            .from('user_progress_with_users')
             .select('*')
             .eq('user_id', user.id)
             .single();
@@ -92,9 +92,7 @@ export const useProgressStore = create<ProgressStore>()(
                 .select()
                 .single();
 
-              if (createError) {
-                throw createError;
-              }
+              if (createError) throw createError;
               set({ progress: newProgress, error: null });
             } else {
               throw error;
@@ -104,23 +102,15 @@ export const useProgressStore = create<ProgressStore>()(
           }
         } catch (err) {
           console.error('Error fetching progress:', err);
-          set({ error: 'Failed to fetch progress. Please try again later.' });
+          set({ error: 'Failed to fetch progress' });
         }
       },
 
       fetchLeaderboard: async () => {
         try {
           const { data, error } = await supabase
-            .from('user_progress')
-            .select(`
-              user_id,
-              xp,
-              level,
-              badges,
-              users (
-                name
-              )
-            `)
+            .from('user_progress_with_users')
+            .select('*')
             .order('xp', { ascending: false })
             .limit(10);
 
@@ -128,7 +118,7 @@ export const useProgressStore = create<ProgressStore>()(
 
           const leaderboard = data.map((entry, index) => ({
             userId: entry.user_id,
-            userName: entry.users?.name || 'Unknown User',
+            userName: entry.user_name || 'Unknown User',
             xp: entry.xp,
             level: entry.level,
             badges: entry.badges?.length || 0,
@@ -138,7 +128,7 @@ export const useProgressStore = create<ProgressStore>()(
           set({ leaderboard, error: null });
         } catch (err) {
           console.error('Error fetching leaderboard:', err);
-          set({ error: 'Failed to fetch leaderboard. Please try again later.' });
+          set({ error: 'Failed to fetch leaderboard' });
         }
       },
 
@@ -173,22 +163,21 @@ export const useProgressStore = create<ProgressStore>()(
             progress: state.progress
               ? { ...state.progress, xp: newXP, level: newLevel }
               : null,
-            error: null
+            error: null,
           }));
 
-          // Level up celebration
           if (newLevel > currentProgress.level) {
             confetti({
               particleCount: 100,
               spread: 70,
-              origin: { y: 0.6 }
+              origin: { y: 0.6 },
             });
           }
 
           await get().checkBadgeUnlocks();
         } catch (err) {
           console.error('Error adding XP:', err);
-          set({ error: 'Failed to add XP. Please try again later.' });
+          set({ error: 'Failed to add XP' });
         }
       },
 
@@ -228,18 +217,17 @@ export const useProgressStore = create<ProgressStore>()(
             progress: state.progress
               ? { ...state.progress, badges: updatedBadges }
               : null,
-            error: null
+            error: null,
           }));
 
-          // Badge unlock celebration
           confetti({
             particleCount: 100,
             spread: 70,
-            origin: { y: 0.6 }
+            origin: { y: 0.6 },
           });
         } catch (err) {
           console.error('Error unlocking badge:', err);
-          set({ error: 'Failed to unlock badge. Please try again later.' });
+          set({ error: 'Failed to unlock badge' });
         }
       },
 
@@ -288,13 +276,13 @@ export const useProgressStore = create<ProgressStore>()(
                   lastTaskDate: today,
                 }
               : null,
-            error: null
+            error: null,
           }));
 
           await get().checkBadgeUnlocks();
         } catch (err) {
           console.error('Error updating streak:', err);
-          set({ error: 'Failed to update streak. Please try again later.' });
+          set({ error: 'Failed to update streak' });
         }
       },
 
@@ -330,7 +318,7 @@ export const useProgressStore = create<ProgressStore>()(
           }
         } catch (err) {
           console.error('Error checking badge unlocks:', err);
-          set({ error: 'Failed to check badge unlocks. Please try again later.' });
+          set({ error: 'Failed to check badge unlocks' });
         }
       },
     }),
