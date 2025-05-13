@@ -1,6 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type UserType = 'student' | 'developer' | 'freelancer' | 'startup';
 
 export interface Task {
   id: string;
@@ -26,6 +27,18 @@ export interface Task {
   passwordHash?: string;
   xpReward?: number;
   completedOnTime?: boolean;
+  courseId?: string;
+  assignmentType?: 'homework' | 'exam' | 'project' | 'reading';
+  grade?: number;
+  githubIssueId?: string;
+  repositoryUrl?: string;
+  clientId?: string;
+  projectId?: string;
+  billable?: boolean;
+  rate?: number;
+  teamId?: string;
+  sprintId?: string;
+  storyPoints?: number;
 }
 
 export interface UserProgress {
@@ -113,6 +126,120 @@ export interface User {
   email: string;
   name: string;
   isPremium: boolean;
+  userType?: UserType;
+  preferences?: UserPreferences;
+}
+
+export interface UserPreferences {
+  theme: Theme;
+  defaultView: 'list' | 'kanban' | 'calendar';
+  showCompletedTasks: boolean;
+  enableNotifications: boolean;
+  semester?: string;
+  defaultCourse?: string;
+  githubToken?: string;
+  defaultRepository?: string;
+  defaultClient?: string;
+  defaultRate?: number;
+  defaultTeam?: string;
+  defaultSprint?: string;
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  code: string;
+  instructor: string;
+  schedule: string;
+  credits: number;
+  grade?: number;
+}
+
+export interface Assignment {
+  id: string;
+  courseId: string;
+  title: string;
+  type: 'homework' | 'exam' | 'project' | 'reading';
+  dueDate: Date;
+  weight: number;
+  grade?: number;
+}
+
+export interface GitHubIssue {
+  id: string;
+  number: number;
+  title: string;
+  state: string;
+  repository: string;
+  assignees: string[];
+  labels: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CodeSnippet {
+  id: string;
+  title: string;
+  language: string;
+  code: string;
+  tags: string[];
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  rate: number;
+  currency: string;
+  projects: Project[];
+}
+
+export interface Project {
+  id: string;
+  clientId: string;
+  name: string;
+  startDate: Date;
+  endDate?: Date;
+  budget: number;
+  rate: number;
+}
+
+export interface Invoice {
+  id: string;
+  clientId: string;
+  projectId: string;
+  amount: number;
+  status: 'draft' | 'sent' | 'paid';
+  dueDate: Date;
+  items: InvoiceItem[];
+}
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  members: TeamMember[];
+}
+
+export interface TeamMember {
+  userId: string;
+  role: 'admin' | 'member';
+  joinedAt: Date;
+}
+
+export interface Sprint {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  goals: string[];
+  status: 'planning' | 'active' | 'review' | 'completed';
 }
 
 export interface TaskComment {
