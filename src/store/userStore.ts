@@ -8,8 +8,6 @@ interface UserStore {
   darkMode: boolean;
   setUser: (user: User | null) => void;
   toggleDarkMode: () => void;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -20,47 +18,6 @@ export const useUserStore = create<UserStore>()(
       darkMode: false,
       setUser: (user) => set({ user }),
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-      signIn: async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          set({
-            user: {
-              id: data.user.id,
-              email: data.user.email!,
-              name: data.user.user_metadata.name || email.split('@')[0],
-              isPremium: false,
-            },
-          });
-        }
-      },
-      signUp: async (email: string, password: string, name: string) => {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name },
-          },
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          set({
-            user: {
-              id: data.user.id,
-              email: data.user.email!,
-              name: name,
-              isPremium: false,
-            },
-          });
-        }
-      },
       signOut: async () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
@@ -72,3 +29,19 @@ export const useUserStore = create<UserStore>()(
     }
   )
 );
+
+// Set up auth state listener
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session?.user) {
+    useUserStore.setState({
+      user: {
+        id: session.user.id,
+        email: session.user.email!,
+        name: session.user.user_metadata.name || session.user.email!.split('@')[0],
+        isPremium: false,
+      },
+    });
+  } else if (event === 'SIGNED_OUT') {
+    useUserStore.setState({ user: null });
+  }
+});
