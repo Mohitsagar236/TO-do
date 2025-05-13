@@ -12,6 +12,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { ProductivityAnalytics } from './components/ProductivityAnalytics';
 import { TeamPanel } from './components/TeamPanel';
 import { SubscriptionBanner } from './components/SubscriptionBanner';
+import { UserPreferences } from './components/UserPreferences';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -33,6 +34,15 @@ function App() {
       }).catch(console.error);
     }
   }, [user, fetchTasks, cacheData]);
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -70,6 +80,10 @@ function App() {
               <Route
                 path="/pricing"
                 element={user ? <Pricing /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/settings"
+                element={user ? <UserPreferences /> : <Navigate to="/login" replace />}
               />
             </Routes>
           </main>

@@ -9,10 +9,6 @@ const Sidebar = () => {
   const location = useLocation();
   const { subscription } = useUserStore();
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/tasks', icon: CheckSquare, label: 'Tasks' },
@@ -27,18 +23,20 @@ const Sidebar = () => {
       <Button
         variant="outline"
         className="lg:hidden fixed top-4 left-4 z-50"
-        onClick={toggleMobileMenu}
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </Button>
 
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-40
-        transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0 transition-transform duration-300 ease-in-out
-        w-64 bg-white dark:bg-gray-800 shadow-md
-        overflow-y-auto
-      `}>
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+          lg:translate-x-0 transition-transform duration-300 ease-in-out
+          w-64 bg-white dark:bg-gray-800 shadow-md
+          overflow-y-auto
+        `}
+      >
         <div className="p-6">
           <h1 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
             TaskMaster
