@@ -31,7 +31,14 @@ export function HabitTracker() {
   const handleAddHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addHabit(newHabit);
+      // Convert the habit data to JSON and set the Content-Type header
+      const habitData = {
+        ...newHabit,
+        created_at: new Date().toISOString(),
+      };
+
+      await addHabit(habitData);
+      
       setNewHabit({
         name: '',
         description: '',
