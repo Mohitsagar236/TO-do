@@ -12,26 +12,29 @@ import { FocusMode } from '../components/FocusMode';
 import { MindMap } from '../components/MindMap';
 import { AgendaView } from '../components/AgendaView';
 import { RoutineManager } from '../components/RoutineManager';
+import { ProgressDisplay } from '../components/ProgressDisplay';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
+import { useProgressStore } from '../store/progressStore';
 
 function Dashboard() {
   const { preferences } = useUserStore();
   const checkAndExecuteRoutines = useRoutineStore((state) => state.checkAndExecuteRoutines);
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'routines'>(
+  const { fetchProgress, fetchLeaderboard } = useProgressStore();
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'routines' | 'progress'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
 
   useEffect(() => {
-    // Check for routines that need to be executed
     checkAndExecuteRoutines();
+    fetchProgress();
+    fetchLeaderboard();
 
-    // Set up interval to check routines every minute
     const interval = setInterval(checkAndExecuteRoutines, 60000);
     return () => clearInterval(interval);
-  }, [checkAndExecuteRoutines]);
+  }, [checkAndExecuteRoutines, fetchProgress, fetchLeaderboard]);
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -86,9 +89,15 @@ function Dashboard() {
             variant={view === 'routines' ? 'primary' : 'outline'}
             onClick={() => setView('routines')}
             size="sm"
-          
           >
             Routines
+          </Button>
+          <Button
+            variant={view === 'progress' ? 'primary' : 'outline'}
+            onClick={() => setView('progress')}
+            size="sm"
+          >
+            Progress
           </Button>
           <Button
             variant={focusModeActive ? 'primary' : 'outline'}
@@ -121,6 +130,7 @@ function Dashboard() {
               {view === 'mindmap' && <MindMap />}
               {view === 'agenda' && <AgendaView />}
               {view === 'routines' && <RoutineManager />}
+              {view === 'progress' && <ProgressDisplay />}
             </div>
           </div>
           <div className="space-y-6">

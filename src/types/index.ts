@@ -24,6 +24,41 @@ export interface Task {
   encryptionKey?: string;
   passwordProtected?: boolean;
   passwordHash?: string;
+  xpReward?: number;
+  completedOnTime?: boolean;
+}
+
+export interface UserProgress {
+  id: string;
+  userId: string;
+  xp: number;
+  level: number;
+  badges: Badge[];
+  streakDays: number;
+  lastTaskDate: Date;
+  tasksCompleted: number;
+  createdAt: Date;
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  requirement: {
+    type: 'tasks' | 'streak' | 'xp';
+    value: number;
+  };
+  unlockedAt?: Date;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  userName: string;
+  xp: number;
+  level: number;
+  badges: number;
+  rank: number;
 }
 
 export interface TimeEntry {
