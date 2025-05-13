@@ -142,3 +142,41 @@ export interface UserPoints {
   level: number;
   createdAt: Date;
 }
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  tasks: TaskTemplateItem[];
+  createdAt: Date;
+}
+
+export interface TaskTemplateItem {
+  title: string;
+  description?: string;
+  priority: Priority;
+  category: string;
+  durationEstimate?: number;
+  dependencies?: string[];
+}
+
+export interface Routine {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  templateId: string;
+  schedule: RoutineSchedule;
+  lastRun?: Date;
+  createdAt: Date;
+}
+
+export interface RoutineSchedule {
+  type: 'daily' | 'weekly' | 'monthly';
+  time?: string;
+  days?: number[];
+  dayOfMonth?: number;
+  startDate: Date;
+  endDate?: Date;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TaskForm } from '../components/ui/TaskForm';
 import { TaskList } from '../components/TaskList';
 import { KanbanBoard } from '../components/KanbanBoard';
@@ -11,15 +11,27 @@ import { HabitTracker } from '../components/HabitTracker';
 import { FocusMode } from '../components/FocusMode';
 import { MindMap } from '../components/MindMap';
 import { AgendaView } from '../components/AgendaView';
+import { RoutineManager } from '../components/RoutineManager';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
+import { useRoutineStore } from '../store/routineStore';
 
 function Dashboard() {
   const { preferences } = useUserStore();
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda'>(
+  const checkAndExecuteRoutines = useRoutineStore((state) => state.checkAndExecuteRoutines);
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'routines'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
+
+  useEffect(() => {
+    // Check for routines that need to be executed
+    checkAndExecuteRoutines();
+
+    // Set up interval to check routines every minute
+    const interval = setInterval(checkAndExecuteRoutines, 60000);
+    return () => clearInterval(interval);
+  }, [checkAndExecuteRoutines]);
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -71,6 +83,14 @@ function Dashboard() {
             Agenda
           </Button>
           <Button
+            variant={view === 'routines' ? 'primary' : 'outline'}
+            onClick={() => setView('routines')}
+            size="sm"
+          
+          >
+            Routines
+          </Button>
+          <Button
             variant={focusModeActive ? 'primary' : 'outline'}
             onClick={() => setFocusModeActive(!focusModeActive)}
             size="sm"
@@ -100,6 +120,7 @@ function Dashboard() {
               {view === 'habits' && <HabitTracker />}
               {view === 'mindmap' && <MindMap />}
               {view === 'agenda' && <AgendaView />}
+              {view === 'routines' && <RoutineManager />}
             </div>
           </div>
           <div className="space-y-6">
