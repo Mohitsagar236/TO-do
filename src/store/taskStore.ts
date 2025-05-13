@@ -47,7 +47,7 @@ export const useTaskStore = create<TaskStore>()(
           .from('task_comments')
           .select(`
             *,
-            user:user_id (
+            users!task_comments_user_id_fkey (
               id,
               email,
               name
@@ -66,11 +66,7 @@ export const useTaskStore = create<TaskStore>()(
               taskId: comment.task_id,
               content: comment.content,
               createdAt: new Date(comment.created_at),
-              user: {
-                id: comment.user.id,
-                name: comment.user.name,
-                email: comment.user.email,
-              },
+              user: comment.users,
               mentions: comment.mentions || [],
             })),
           },
@@ -90,7 +86,7 @@ export const useTaskStore = create<TaskStore>()(
           })
           .select(`
             *,
-            user:user_id (
+            users!task_comments_user_id_fkey (
               id,
               email,
               name
@@ -110,11 +106,7 @@ export const useTaskStore = create<TaskStore>()(
                 taskId: data.task_id,
                 content: data.content,
                 createdAt: new Date(data.created_at),
-                user: {
-                  id: data.user.id,
-                  name: data.user.name,
-                  email: data.user.email,
-                },
+                user: data.users,
                 mentions: data.mentions || [],
               },
             ],

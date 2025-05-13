@@ -12,13 +12,21 @@ interface TaskDetailsProps {
 }
 
 export function TaskDetails({ task, onClose }: TaskDetailsProps) {
-  const { comments, fetchComments, addComment, shareTask, assignTask } = useTaskStore();
+  const { comments, fetchComments, addComment, shareTask, assignTask } = useTaskStore((state) => ({
+    comments: state.comments,
+    fetchComments: state.fetchComments,
+    addComment: state.addComment,
+    shareTask: state.shareTask,
+    assignTask: state.assignTask,
+  }));
   const [newComment, setNewComment] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [assignEmail, setAssignEmail] = useState('');
 
   useEffect(() => {
-    fetchComments(task.id).catch(console.error);
+    if (task.id) {
+      fetchComments(task.id);
+    }
   }, [task.id, fetchComments]);
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -77,7 +85,7 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                 <span>Priority: {task.priority}</span>
                 <span>Category: {task.category}</span>
                 {task.dueDate && (
-                  <span>Due: {format(task.dueDate, 'MMM d, yyyy')}</span>
+                  <span>Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}</span>
                 )}
               </div>
             </div>
@@ -94,7 +102,7 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                   value={shareEmail}
                   onChange={(e) => setShareEmail(e.target.value)}
                   placeholder="Enter email to share with"
-                  className="flex-1 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Button type="submit">Share</Button>
               </form>
@@ -112,7 +120,7 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                   value={assignEmail}
                   onChange={(e) => setAssignEmail(e.target.value)}
                   placeholder="Enter email to assign to"
-                  className="flex-1 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Button type="submit">Assign</Button>
               </form>
@@ -125,16 +133,16 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                 Comments
               </h3>
               <div className="space-y-4 mb-4">
-                {comments[task.id]?.map((comment) => (
+                {comments[task.id]?.map((comment: TaskComment) => (
                   <div key={comment.id} className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
                       <User className="w-8 h-8 text-gray-400" />
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium dark:text-white">{comment.user.name}</span>
+                        <span className="font-medium dark:text-white">{comment.user?.name || 'Unknown User'}</span>
                         <span className="text-sm text-gray-500">
-                          {format(comment.createdAt, 'MMM d, yyyy HH:mm')}
+                          {format(new Date(comment.createdAt), 'MMM d, yyyy HH:mm')}
                         </span>
                       </div>
                       <p className="text-gray-600 dark:text-gray-300">{comment.content}</p>
@@ -148,7 +156,7 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Button type="submit">Comment</Button>
               </form>
