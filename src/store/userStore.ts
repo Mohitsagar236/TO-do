@@ -3,6 +3,22 @@ import { persist } from 'zustand/middleware';
 import { User, Subscription } from '../types';
 import { supabase } from '../lib/supabase';
 
+interface UserPreferences {
+  defaultView: 'list' | 'kanban' | 'calendar';
+  showCompletedTasks: boolean;
+  enableNotifications: boolean;
+  taskSortOrder: 'dueDate' | 'priority' | 'created';
+  defaultPriority: 'low' | 'medium' | 'high';
+}
+
+const defaultPreferences: UserPreferences = {
+  defaultView: 'list',
+  showCompletedTasks: true,
+  enableNotifications: true,
+  taskSortOrder: 'dueDate',
+  defaultPriority: 'medium'
+};
+
 interface UserStore {
   user: User | null;
   subscription: Subscription | null;
