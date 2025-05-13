@@ -101,3 +101,44 @@ export interface TaskAssignment {
   assignedBy: string;
   createdAt: Date;
 }
+
+export interface Habit {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  frequency: 'daily' | 'weekly';
+  target: number;
+  unit?: string;
+  reminderTime?: string;
+  createdAt: Date;
+  archivedAt?: Date;
+  color: string;
+}
+
+export interface HabitCompletion {
+  id: string;
+  habitId: string;
+  userId: string;
+  date: Date;
+  value: number;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface HabitStreak {
+  id: string;
+  habitId: string;
+  userId: string;
+  startDate: Date;
+  endDate?: Date;
+  length: number;
+}
+
+export interface UserPoints {
+  id: string;
+  userId: string;
+  points: number;
+  level: number;
+  createdAt: Date;
+}

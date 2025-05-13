@@ -7,13 +7,14 @@ import { PomodoroTimer } from '../components/PomodoroTimer';
 import { TimeTracker } from '../components/TimeTracker';
 import { DashboardSummary } from '../components/DashboardSummary';
 import { UserPreferences } from '../components/UserPreferences';
+import { HabitTracker } from '../components/HabitTracker';
 import { FocusMode } from '../components/FocusMode';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 
 function Dashboard() {
   const { preferences } = useUserStore();
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar'>(
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
@@ -47,6 +48,13 @@ function Dashboard() {
             Calendar
           </Button>
           <Button
+            variant={view === 'habits' ? 'primary' : 'outline'}
+            onClick={() => setView('habits')}
+            size="sm"
+          >
+            Habits
+          </Button>
+          <Button
             variant={focusModeActive ? 'primary' : 'outline'}
             onClick={() => setFocusModeActive(!focusModeActive)}
             size="sm"
@@ -73,6 +81,7 @@ function Dashboard() {
               {view === 'list' && <TaskList />}
               {view === 'kanban' && <KanbanBoard />}
               {view === 'calendar' && <Calendar />}
+              {view === 'habits' && <HabitTracker />}
             </div>
           </div>
           <div className="space-y-6">
