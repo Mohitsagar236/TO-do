@@ -1,4 +1,8 @@
 {
+  "type": "module",
+  "scripts": {
+    "dev": "vite"
+  },
   "dependencies": {
     "canvas-confetti": "^1.9.2"
   }

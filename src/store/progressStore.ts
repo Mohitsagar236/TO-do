@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { UserProgress, Badge, LeaderboardEntry } from '../types';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from './userStore';
-import ConfettiGenerator from 'canvas-confetti';
+import confetti from 'canvas-confetti';
 
 interface ProgressStore {
   progress: UserProgress | null;
@@ -153,7 +153,7 @@ export const useProgressStore = create<ProgressStore>()(
 
         // Level up celebration
         if (newLevel > currentProgress.level) {
-          ConfettiGenerator({
+          confetti({
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 }
@@ -192,7 +192,7 @@ export const useProgressStore = create<ProgressStore>()(
         }));
 
         // Badge unlock celebration
-        ConfettiGenerator({
+        confetti({
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 }
