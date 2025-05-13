@@ -11,8 +11,9 @@ export function TaskForm() {
   const [priority, setPriority] = useState<Priority>('medium');
   const [category, setCategory] = useState('personal');
   const [dueDate, setDueDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -20,21 +21,29 @@ export function TaskForm() {
       return;
     }
 
-    addTask({
-      title,
-      description,
-      priority,
-      category,
-      completed: false,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await addTask({
+        title,
+        description,
+        priority,
+        category,
+        completed: false,
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+      });
 
-    toast.success('Task added successfully!');
-    setTitle('');
-    setDescription('');
-    setPriority('medium');
-    setCategory('personal');
-    setDueDate('');
+      toast.success('Task added successfully!');
+      setTitle('');
+      setDescription('');
+      setPriority('medium');
+      setCategory('personal');
+      setDueDate('');
+    } catch (error) {
+      toast.error('Failed to add task');
+      console.error('Error adding task:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -115,8 +124,8 @@ export function TaskForm() {
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
-        Add Task
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? 'Adding Task...' : 'Add Task'}
       </Button>
     </form>
   );

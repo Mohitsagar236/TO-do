@@ -4,9 +4,27 @@ import { CheckCircle, Circle, Trash2 } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { Task } from '../types';
 import { Button } from './ui/Button';
+import toast from 'react-hot-toast';
 
 export function TaskList() {
   const { tasks, toggleTask, deleteTask } = useTaskStore();
+
+  const handleToggleTask = async (id: string) => {
+    try {
+      await toggleTask(id);
+    } catch (error) {
+      toast.error('Failed to update task');
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteTask(id);
+      toast.success('Task deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete task');
+    }
+  };
 
   const getPriorityColor = (priority: Task['priority']) => {
     switch (priority) {
@@ -30,7 +48,7 @@ export function TaskList() {
         >
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => toggleTask(task.id)}
+              onClick={() => handleToggleTask(task.id)}
               className="focus:outline-none"
             >
               {task.completed ? (
@@ -64,7 +82,7 @@ export function TaskList() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => deleteTask(task.id)}
+            onClick={() => handleDeleteTask(task.id)}
             className="text-red-500 hover:text-red-700"
           >
             <Trash2 className="w-4 h-4" />

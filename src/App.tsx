@@ -1,7 +1,8 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useUserStore } from './store/userStore';
+import { useTaskStore } from './store/taskStore';
 
 // Components
 import Header from './components/Header';
@@ -13,19 +14,35 @@ import AllTasks from './pages/AllTasks';
 import Login from './pages/Login';
 
 function App() {
-  const darkMode = useUserStore((state) => state.darkMode);
+  const { darkMode, user } = useUserStore();
+  const fetchTasks = useTaskStore((state) => state.fetchTasks);
+
+  useEffect(() => {
+    if (user) {
+      fetchTasks().catch(console.error);
+    }
+  }, [user, fetchTasks]);
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-        <Sidebar />
+        {user && <Sidebar />}
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
           <main className="flex-1 overflow-y-auto p-4">
             <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/tasks" element={<AllTasks />} />
+              <Route
+                path="/login"
+                element={user ? <Navigate to="/" replace /> : <Login />}
+              />
+              <Route
+                path="/"
+                element={user ? <Dashboard /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/tasks"
+                element={user ? <AllTasks /> : <Navigate to="/login" replace />}
+              />
             </Routes>
           </main>
         </div>
