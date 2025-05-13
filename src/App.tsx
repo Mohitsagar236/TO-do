@@ -3,10 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useUserStore } from './store/userStore';
 import { useTaskStore } from './store/taskStore';
+import { useOfflineStore } from './store/offlineStore';
 
 // Components
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -16,12 +18,17 @@ import Login from './pages/Login';
 function App() {
   const { darkMode, user } = useUserStore();
   const fetchTasks = useTaskStore((state) => state.fetchTasks);
+  const { isOnline, cacheData } = useOfflineStore();
 
   useEffect(() => {
     if (user) {
-      fetchTasks().catch(console.error);
+      fetchTasks().then((tasks) => {
+        if (tasks) {
+          cacheData(tasks, 'tasks');
+        }
+      }).catch(console.error);
     }
-  }, [user, fetchTasks]);
+  }, [user, fetchTasks, cacheData]);
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
@@ -51,6 +58,7 @@ function App() {
           </main>
         </div>
       </div>
+      <OfflineIndicator />
       <Toaster 
         position="bottom-right"
         toastOptions={{

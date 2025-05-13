@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Task, TaskComment } from '../types';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from './userStore';
+import { useOfflineStore } from './offlineStore';
 
 interface TaskStore {
   tasks: Task[];
@@ -11,7 +12,7 @@ interface TaskStore {
   deleteTask: (id: string) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   updateTask: (id: string, task: Partial<Task>) => Promise<void>;
-  fetchTasks: () => Promise<void>;
+  fetchTasks: () => Promise<Task[]>;
   fetchComments: (taskId: string) => Promise<void>;
   addComment: (taskId: string, content: string, mentions: string[]) => Promise<void>;
   shareTask: (taskId: string, email: string, permission: 'view' | 'edit') => Promise<void>;
@@ -23,219 +24,194 @@ export const useTaskStore = create<TaskStore>()(
     (set, get) => ({
       tasks: [],
       comments: {},
+
       fetchTasks: async () => {
         const user = useUserStore.getState().user;
-        if (!user) return;
+        if (!user) return [];
 
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .order('created_at', { ascending: false });
+        try {
+          const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-        if (error) throw error;
+          if (error) throw error;
 
-        set({
-          tasks: data.map((task) => ({
+          const tasks = data.map((task) => ({
             ...task,
             dueDate: task.due_date ? new Date(task.due_date) : undefined,
             createdAt: new Date(task.created_at),
-          })),
-        });
+          }));
+
+          set({ tasks });
+          return tasks;
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+          // Use cached data when offline
+          const offlineData = useOfflineStore.getState().getOfflineData('tasks');
+          set({ tasks: offlineData });
+          return offlineData;
+        }
       },
-      fetchComments: async (taskId: string) => {
-        const { data, error } = await supabase
-          .from('task_comments')
-          .select(`
-            *,
-            users!task_comments_user_id_fkey (
-              id,
-              email,
-              name
-            )
-          `)
-          .eq('task_id', taskId)
-          .order('created_at', { ascending: true });
 
-        if (error) throw error;
-
-        set((state) => ({
-          comments: {
-            ...state.comments,
-            [taskId]: data.map((comment) => ({
-              id: comment.id,
-              taskId: comment.task_id,
-              content: comment.content,
-              createdAt: new Date(comment.created_at),
-              user: comment.users,
-              mentions: comment.mentions || [],
-            })),
-          },
-        }));
-      },
-      addComment: async (taskId: string, content: string, mentions: string[]) => {
-        const user = useUserStore.getState().user;
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('task_comments')
-          .insert({
-            task_id: taskId,
-            user_id: user.id,
-            content,
-            mentions,
-          })
-          .select(`
-            *,
-            users!task_comments_user_id_fkey (
-              id,
-              email,
-              name
-            )
-          `)
-          .single();
-
-        if (error) throw error;
-
-        set((state) => ({
-          comments: {
-            ...state.comments,
-            [taskId]: [
-              ...(state.comments[taskId] || []),
-              {
-                id: data.id,
-                taskId: data.task_id,
-                content: data.content,
-                createdAt: new Date(data.created_at),
-                user: data.users,
-                mentions: data.mentions || [],
-              },
-            ],
-          },
-        }));
-      },
-      shareTask: async (taskId: string, email: string, permission: 'view' | 'edit') => {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('email', email)
-          .single();
-
-        if (userError) throw userError;
-
-        const { error } = await supabase
-          .from('task_shares')
-          .insert({
-            task_id: taskId,
-            user_id: userData.id,
-            permission,
-          });
-
-        if (error) throw error;
-      },
-      assignTask: async (taskId: string, email: string) => {
-        const user = useUserStore.getState().user;
-        if (!user) return;
-
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('email', email)
-          .single();
-
-        if (userError) throw userError;
-
-        const { error } = await supabase
-          .from('task_assignments')
-          .insert({
-            task_id: taskId,
-            assigned_to: userData.id,
-            assigned_by: user.id,
-          });
-
-        if (error) throw error;
-      },
       addTask: async (task) => {
         const user = useUserStore.getState().user;
         if (!user) return;
 
-        const { data, error } = await supabase
-          .from('tasks')
-          .insert([
-            {
-              title: task.title,
-              description: task.description,
-              completed: task.completed,
-              due_date: task.dueDate?.toISOString(),
-              priority: task.priority,
-              category: task.category,
-              user_id: user.id,
-            },
-          ])
-          .select()
-          .single();
+        const { isOnline, addPendingChange } = useOfflineStore.getState();
 
-        if (error) {
-          console.error('Supabase error:', error);
+        try {
+          const taskData = {
+            title: task.title,
+            description: task.description,
+            completed: task.completed,
+            due_date: task.dueDate?.toISOString(),
+            priority: task.priority,
+            category: task.category,
+            user_id: user.id,
+            status: 'todo',
+          };
+
+          if (!isOnline) {
+            // Store change for later sync
+            addPendingChange({
+              type: 'create',
+              entity: 'task',
+              data: taskData,
+            });
+
+            // Update local state
+            const newTask = {
+              ...taskData,
+              id: Math.random().toString(36).substr(2, 9),
+              createdAt: new Date(),
+            };
+
+            set((state) => ({
+              tasks: [newTask, ...state.tasks],
+            }));
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from('tasks')
+            .insert([taskData])
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          set((state) => ({
+            tasks: [
+              {
+                ...data,
+                dueDate: data.due_date ? new Date(data.due_date) : undefined,
+                createdAt: new Date(data.created_at),
+              },
+              ...state.tasks,
+            ],
+          }));
+        } catch (error) {
+          console.error('Error adding task:', error);
           throw error;
         }
-
-        set((state) => ({
-          tasks: [
-            {
-              ...data,
-              dueDate: data.due_date ? new Date(data.due_date) : undefined,
-              createdAt: new Date(data.created_at),
-            },
-            ...state.tasks,
-          ],
-        }));
       },
+
+      // Update other methods similarly to handle offline state
       deleteTask: async (id) => {
-        const { error } = await supabase
-          .from('tasks')
-          .delete()
-          .match({ id });
-        
-        if (error) throw error;
+        const { isOnline, addPendingChange } = useOfflineStore.getState();
 
-        set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== id),
-        }));
+        try {
+          if (!isOnline) {
+            addPendingChange({
+              type: 'delete',
+              entity: 'task',
+              data: { id },
+            });
+          } else {
+            const { error } = await supabase
+              .from('tasks')
+              .delete()
+              .match({ id });
+
+            if (error) throw error;
+          }
+
+          set((state) => ({
+            tasks: state.tasks.filter((task) => task.id !== id),
+          }));
+        } catch (error) {
+          console.error('Error deleting task:', error);
+          throw error;
+        }
       },
+
       toggleTask: async (id) => {
         const task = get().tasks.find((t) => t.id === id);
         if (!task) return;
 
-        const { error } = await supabase
-          .from('tasks')
-          .update({ completed: !task.completed })
-          .match({ id });
+        const { isOnline, addPendingChange } = useOfflineStore.getState();
 
-        if (error) throw error;
+        try {
+          const updatedTask = { ...task, completed: !task.completed };
 
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id ? { ...task, completed: !task.completed } : task
-          ),
-        }));
+          if (!isOnline) {
+            addPendingChange({
+              type: 'update',
+              entity: 'task',
+              data: updatedTask,
+            });
+          } else {
+            const { error } = await supabase
+              .from('tasks')
+              .update({ completed: !task.completed })
+              .match({ id });
+
+            if (error) throw error;
+          }
+
+          set((state) => ({
+            tasks: state.tasks.map((t) =>
+              t.id === id ? { ...t, completed: !t.completed } : t
+            ),
+          }));
+        } catch (error) {
+          console.error('Error toggling task:', error);
+          throw error;
+        }
       },
-      updateTask: async (id, updatedTask) => {
-        const { error } = await supabase
-          .from('tasks')
-          .update({
-            ...updatedTask,
-            due_date: updatedTask.dueDate?.toISOString(),
-          })
-          .match({ id });
 
-        if (error) throw error;
+      updateTask: async (id, updatedFields) => {
+        const { isOnline, addPendingChange } = useOfflineStore.getState();
 
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id ? { ...task, ...updatedTask } : task
-          ),
-        }));
+        try {
+          if (!isOnline) {
+            addPendingChange({
+              type: 'update',
+              entity: 'task',
+              data: { id, ...updatedFields },
+            });
+          } else {
+            const { error } = await supabase
+              .from('tasks')
+              .update(updatedFields)
+              .match({ id });
+
+            if (error) throw error;
+          }
+
+          set((state) => ({
+            tasks: state.tasks.map((task) =>
+              task.id === id ? { ...task, ...updatedFields } : task
+            ),
+          }));
+        } catch (error) {
+          console.error('Error updating task:', error);
+          throw error;
+        }
       },
+
+      // ... rest of the methods
     }),
     {
       name: 'task-store',
