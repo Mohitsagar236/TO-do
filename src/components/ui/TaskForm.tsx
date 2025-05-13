@@ -45,7 +45,8 @@ export function TaskForm() {
         priority,
         category,
         completed: false,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
+        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        status: 'todo'
       };
 
       if (isEncrypted) {
@@ -91,7 +92,6 @@ export function TaskForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
         body: JSON.stringify({ title, description })
       });
@@ -219,7 +219,6 @@ export function TaskForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
         body: JSON.stringify({ notes })
       });
