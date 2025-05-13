@@ -3,6 +3,8 @@ import { TaskForm } from '../components/ui/TaskForm';
 import { TaskList } from '../components/TaskList';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { Calendar } from '../components/Calendar';
+import { PomodoroTimer } from '../components/PomodoroTimer';
+import { TimeTracker } from '../components/TimeTracker';
 import { Button } from '../components/ui/Button';
 
 function Dashboard() {
@@ -34,11 +36,17 @@ function Dashboard() {
         </div>
       </div>
       
-      <div className="space-y-8">
-        <TaskForm />
-        {view === 'list' && <TaskList />}
-        {view === 'kanban' && <KanbanBoard />}
-        {view === 'calendar' && <Calendar />}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-8">
+          <TaskForm />
+          {view === 'list' && <TaskList />}
+          {view === 'kanban' && <KanbanBoard />}
+          {view === 'calendar' && <Calendar />}
+        </div>
+        <div className="space-y-6">
+          <PomodoroTimer />
+          <TimeTracker />
+        </div>
       </div>
     </div>
   );

@@ -19,6 +19,28 @@ export interface Task {
   assignedTo?: User;
   sharedWith?: User[];
   recurrence?: TaskRecurrence;
+  timeEntries?: TimeEntry[];
+}
+
+export interface TimeEntry {
+  id: string;
+  taskId: string;
+  userId: string;
+  startTime: Date;
+  endTime?: Date;
+  duration: string;
+  type: 'pomodoro' | 'manual';
+  createdAt: Date;
+}
+
+export interface PomodoroSettings {
+  id: string;
+  userId: string;
+  workDuration: number;
+  breakDuration: number;
+  longBreakDuration: number;
+  sessionsUntilLongBreak: number;
+  createdAt: Date;
 }
 
 export interface Tag {
