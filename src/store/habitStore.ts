@@ -72,16 +72,24 @@ export const useHabitStore = create<HabitStore>()(
 
         const { data, error } = await supabase
           .from('habits')
-          .insert([
-            {
-              ...habit,
-              user_id: user.id,
-            },
-          ])
+          .insert([{
+            name: habit.name,
+            description: habit.description,
+            frequency: habit.frequency,
+            target: habit.target,
+            unit: habit.unit,
+            color: habit.color,
+            reminder_time: habit.reminderTime,
+            user_id: user.id,
+            created_at: new Date().toISOString(),
+          }])
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+        }
 
         set(state => ({
           habits: [
@@ -146,15 +154,13 @@ export const useHabitStore = create<HabitStore>()(
         } else {
           const { data, error } = await supabase
             .from('habit_completions')
-            .insert([
-              {
-                habit_id: habitId,
-                user_id: user.id,
-                date: today.toISOString(),
-                value,
-                notes,
-              },
-            ])
+            .insert([{
+              habit_id: habitId,
+              user_id: user.id,
+              date: today.toISOString(),
+              value,
+              notes,
+            }])
             .select()
             .single();
 
