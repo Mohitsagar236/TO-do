@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Stop, Clock } from 'lucide-react';
+import { Play, Store as Stop, Clock } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useTaskStore } from '../store/taskStore';
 import { supabase } from '../lib/supabase';
