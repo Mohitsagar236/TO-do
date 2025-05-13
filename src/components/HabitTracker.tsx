@@ -60,10 +60,27 @@ export function HabitTracker() {
 
   const getCompletionData = (habitId: string) => {
     const habitCompletions = completions[habitId] || [];
-    return weekDays.map(day => ({
-      date: format(day, 'EEE'),
-      completed: habitCompletions.some(c => format(c.date, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')),
-    }));
+    return weekDays.map(day => {
+      // Ensure day is a valid Date object
+      if (!(day instanceof Date)) {
+        return {
+          date: '',
+          completed: false
+        };
+      }
+
+      // Ensure completion dates are valid before comparing
+      const isCompleted = habitCompletions.some(c => {
+        const completionDate = new Date(c.date);
+        return completionDate instanceof Date && !isNaN(completionDate.getTime()) &&
+          format(completionDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+      });
+
+      return {
+        date: format(day, 'EEE'),
+        completed: isCompleted
+      };
+    });
   };
 
   return (
@@ -181,9 +198,24 @@ export function HabitTracker() {
             <div className="mt-4 flex justify-between items-center">
               <div className="grid grid-cols-7 gap-1 flex-1">
                 {weekDays.map(day => {
-                  const isCompleted = (completions[habit.id] || []).some(
-                    c => format(c.date, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd')
-                  );
+                  // Ensure day is a valid Date before formatting
+                  if (!(day instanceof Date)) {
+                    return (
+                      <div
+                        key={Math.random().toString()}
+                        className="h-8 rounded flex items-center justify-center text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                      >
+                        --
+                      </div>
+                    );
+                  }
+
+                  const isCompleted = (completions[habit.id] || []).some(c => {
+                    const completionDate = new Date(c.date);
+                    return completionDate instanceof Date && !isNaN(completionDate.getTime()) &&
+                      format(completionDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+                  });
+
                   return (
                     <div
                       key={day.toString()}
@@ -202,9 +234,12 @@ export function HabitTracker() {
                 onClick={() => handleComplete(habit.id)}
                 className="ml-4"
                 disabled={
-                  (completions[habit.id] || []).some(c =>
-                    format(c.date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-                  )
+                  (completions[habit.id] || []).some(c => {
+                    const completionDate = new Date(c.date);
+                    const today = new Date();
+                    return completionDate instanceof Date && !isNaN(completionDate.getTime()) &&
+                      format(completionDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+                  })
                 }
               >
                 Complete
