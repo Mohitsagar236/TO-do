@@ -85,14 +85,7 @@ export const useUserStore = create<UserStore>()(
           if (state.user) {
             supabase
               .from('users')
-              .update({ 
-                preferences: updatedPreferences 
-              }, {
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Prefer': 'return=minimal'
-                }
-              })
+              .update({ preferences: updatedPreferences })
               .eq('id', state.user.id)
               .then(({ error }) => {
                 if (error) {
