@@ -7,6 +7,7 @@ import { PomodoroTimer } from '../components/PomodoroTimer';
 import { TimeTracker } from '../components/TimeTracker';
 import { DashboardSummary } from '../components/DashboardSummary';
 import { UserPreferences } from '../components/UserPreferences';
+import { FocusMode } from '../components/FocusMode';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 
@@ -15,6 +16,7 @@ function Dashboard() {
   const [view, setView] = useState<'list' | 'kanban' | 'calendar'>(
     preferences.defaultView
   );
+  const [focusModeActive, setFocusModeActive] = useState(false);
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -44,24 +46,42 @@ function Dashboard() {
           >
             Calendar
           </Button>
+          <Button
+            variant={focusModeActive ? 'primary' : 'outline'}
+            onClick={() => setFocusModeActive(!focusModeActive)}
+            size="sm"
+          >
+            Focus Mode
+          </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-3 space-y-6">
-          <TaskForm />
-          <div className="overflow-x-auto">
-            {view === 'list' && <TaskList />}
-            {view === 'kanban' && <KanbanBoard />}
-            {view === 'calendar' && <Calendar />}
+      {focusModeActive ? (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2">
+            <FocusMode />
+          </div>
+          <div>
+            <PomodoroTimer />
           </div>
         </div>
-        <div className="space-y-6">
-          <UserPreferences />
-          <PomodoroTimer />
-          <TimeTracker />
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-3 space-y-6">
+            <TaskForm />
+            <div className="overflow-x-auto">
+              {view === 'list' && <TaskList />}
+              {view === 'kanban' && <KanbanBoard />}
+              {view === 'calendar' && <Calendar />}
+            </div>
+          </div>
+          <div className="space-y-6">
+            <UserPreferences />
+            <PomodoroTimer />
+            <TimeTracker />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
