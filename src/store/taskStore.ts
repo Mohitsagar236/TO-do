@@ -1,22 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task } from '../types';
+import { Task, TaskComment } from '../types';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from './userStore';
 
 interface TaskStore {
   tasks: Task[];
+  comments: { [taskId: string]: TaskComment[] };
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   updateTask: (id: string, task: Partial<Task>) => Promise<void>;
   fetchTasks: () => Promise<void>;
+  fetchComments: (taskId: string) => Promise<void>;
+  addComment: (taskId: string, content: string, mentions: string[]) => Promise<void>;
+  shareTask: (taskId: string, email: string, permission: 'view' | 'edit') => Promise<void>;
+  assignTask: (taskId: string, email: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskStore>()(
   persist(
     (set, get) => ({
       tasks: [],
+      comments: {},
       fetchTasks: async () => {
         const user = useUserStore.getState().user;
         if (!user) return;
@@ -35,6 +41,126 @@ export const useTaskStore = create<TaskStore>()(
             createdAt: new Date(task.created_at),
           })),
         });
+      },
+      fetchComments: async (taskId: string) => {
+        const { data, error } = await supabase
+          .from('task_comments')
+          .select(`
+            *,
+            user:user_id (
+              id,
+              email,
+              name
+            )
+          `)
+          .eq('task_id', taskId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        set((state) => ({
+          comments: {
+            ...state.comments,
+            [taskId]: data.map((comment) => ({
+              id: comment.id,
+              taskId: comment.task_id,
+              content: comment.content,
+              createdAt: new Date(comment.created_at),
+              user: {
+                id: comment.user.id,
+                name: comment.user.name,
+                email: comment.user.email,
+              },
+              mentions: comment.mentions || [],
+            })),
+          },
+        }));
+      },
+      addComment: async (taskId: string, content: string, mentions: string[]) => {
+        const user = useUserStore.getState().user;
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('task_comments')
+          .insert({
+            task_id: taskId,
+            user_id: user.id,
+            content,
+            mentions,
+          })
+          .select(`
+            *,
+            user:user_id (
+              id,
+              email,
+              name
+            )
+          `)
+          .single();
+
+        if (error) throw error;
+
+        set((state) => ({
+          comments: {
+            ...state.comments,
+            [taskId]: [
+              ...(state.comments[taskId] || []),
+              {
+                id: data.id,
+                taskId: data.task_id,
+                content: data.content,
+                createdAt: new Date(data.created_at),
+                user: {
+                  id: data.user.id,
+                  name: data.user.name,
+                  email: data.user.email,
+                },
+                mentions: data.mentions || [],
+              },
+            ],
+          },
+        }));
+      },
+      shareTask: async (taskId: string, email: string, permission: 'view' | 'edit') => {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (userError) throw userError;
+
+        const { error } = await supabase
+          .from('task_shares')
+          .insert({
+            task_id: taskId,
+            user_id: userData.id,
+            permission,
+          });
+
+        if (error) throw error;
+      },
+      assignTask: async (taskId: string, email: string) => {
+        const user = useUserStore.getState().user;
+        if (!user) return;
+
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (userError) throw userError;
+
+        const { error } = await supabase
+          .from('task_assignments')
+          .insert({
+            task_id: taskId,
+            assigned_to: userData.id,
+            assigned_by: user.id,
+          });
+
+        if (error) throw error;
       },
       addTask: async (task) => {
         const user = useUserStore.getState().user;
