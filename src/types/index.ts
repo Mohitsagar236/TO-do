@@ -1,4 +1,6 @@
 export type Priority = 'low' | 'medium' | 'high';
+export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface Task {
   id: string;
@@ -6,11 +8,37 @@ export interface Task {
   description?: string;
   completed: boolean;
   dueDate?: Date;
+  reminderAt?: Date;
   priority: Priority;
+  status: TaskStatus;
   category: string;
   createdAt: Date;
+  parentTaskId?: string;
+  subtasks?: Task[];
+  tags?: Tag[];
   assignedTo?: User;
   sharedWith?: User[];
+  recurrence?: TaskRecurrence;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  userId: string;
+}
+
+export interface TaskRecurrence {
+  id: string;
+  taskId: string;
+  frequency: RecurrenceFrequency;
+  interval: number;
+  daysOfWeek?: number[];
+  dayOfMonth?: number;
+  monthOfYear?: number;
+  startDate: Date;
+  endDate?: Date;
+  lastGeneratedAt?: Date;
 }
 
 export interface Category {
