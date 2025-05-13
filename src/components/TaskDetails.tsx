@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { User, MessageSquare, Share2, UserPlus, Lock, Unlock } from 'lucide-react';
+import { User, MessageSquare, Share2, UserPlus, Lock, Unlock, FileDown, Video } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { Button } from './ui/Button';
 import { Task, TaskComment } from '../types';
 import { decryptData } from '../lib/encryption';
+import { TaskExport } from './TaskExport';
+import { ScreenRecorder } from './ScreenRecorder';
 import toast from 'react-hot-toast';
 
 interface TaskDetailsProps {
@@ -113,6 +115,26 @@ export function TaskDetails({ task, onClose }: TaskDetailsProps) {
                     <span>Due: {format(new Date(displayTask.dueDate), 'MMM d, yyyy')}</span>
                   )}
                 </div>
+              </div>
+
+              {/* Export and Recording */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center">
+                  <TaskExport />
+                  <ScreenRecorder taskId={task.id} />
+                </div>
+                {task.recording_url && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium dark:text-white mb-2">
+                      Latest Recording
+                    </h4>
+                    <video
+                      src={task.recording_url}
+                      controls
+                      className="w-full rounded-lg"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Share Task */}
