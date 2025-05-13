@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import React, { useState } from 'react';
 import { format, parse, startOfWeek, getDay, addMinutes } from 'date-fns';
+import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { useTaskStore } from '../store/taskStore';
 import { Task } from '../types';
 import { Button } from './ui/Button';
 import { Clock, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import enUS from 'date-fns/locale/en-US';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
   'en-US': enUS,
 };
 
-const localizer = {
-  format: (date: Date, format: string) => format(date, format),
-  parse: (str: string, format: string) => parse(str, format, new Date()),
-  startOfWeek: (date: Date) => startOfWeek(date),
-  getDay: (date: Date) => getDay(date),
-};
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 interface TimeBlock {
   id: string;
@@ -98,7 +100,7 @@ export function AgendaView() {
               <select
                 value={selectedTask?.id || ''}
                 onChange={(e) => setSelectedTask(tasks.find((t) => t.id === e.target.value) || null)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="">Select a task...</option>
                 {tasks.map((task) => (
@@ -120,7 +122,7 @@ export function AgendaView() {
                   onChange={(e) => setBlockDuration(parseInt(e.target.value))}
                   min="15"
                   step="15"
-                  className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                  className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Clock className="w-5 h-5 text-gray-400" />
               </div>
@@ -138,7 +140,7 @@ export function AgendaView() {
 
       <div className="h-[600px]">
         <Calendar
-          localizer={localizer as any}
+          localizer={localizer}
           events={events}
           startAccessor="start"
           endAccessor="end"
