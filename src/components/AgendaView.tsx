@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addMinutes } from 'date-fns';
 import { useTaskStore } from '../store/taskStore';
@@ -6,9 +6,10 @@ import { Task } from '../types';
 import { Button } from './ui/Button';
 import { Clock, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import enUS from 'date-fns/locale/en-US';
 
 const locales = {
-  'en-US': require('date-fns/locale/en-US'),
+  'en-US': enUS,
 };
 
 const localizer = {
