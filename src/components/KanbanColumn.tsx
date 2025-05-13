@@ -26,7 +26,7 @@ export function KanbanColumn({ status, tasks }: KanbanColumnProps) {
       className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4"
       id={status}
     >
-      <h3 className="font-semibold mb-4 text-gray-700 dark:text-gray-300">
+      <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">
         {getColumnTitle(status)} ({tasks.length})
       </h3>
       <div className="space-y-2">

@@ -31,7 +31,7 @@ export function KanbanTask({ task }: KanbanTaskProps) {
     >
       <h4 className="font-medium text-gray-900 dark:text-white">{task.title}</h4>
       {task.description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
           {task.description}
         </p>
       )}
@@ -39,8 +39,8 @@ export function KanbanTask({ task }: KanbanTaskProps) {
         {task.tags?.map((tag) => (
           <span
             key={tag.id}
-            className="px-2 py-1 rounded-full text-xs"
-            style={{ backgroundColor: tag.color, color: '#fff' }}
+            className="px-2 py-1 rounded-full text-xs text-white"
+            style={{ backgroundColor: tag.color }}
           >
             {tag.name}
           </span>
