@@ -13,6 +13,7 @@ import { MindMap } from '../components/MindMap';
 import { AgendaView } from '../components/AgendaView';
 import { RoutineManager } from '../components/RoutineManager';
 import { ProgressDisplay } from '../components/ProgressDisplay';
+import { PluginStore } from '../components/PluginStore';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
@@ -22,7 +23,7 @@ function Dashboard() {
   const { preferences } = useUserStore();
   const checkAndExecuteRoutines = useRoutineStore((state) => state.checkAndExecuteRoutines);
   const { fetchProgress, fetchLeaderboard } = useProgressStore();
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'routines' | 'progress'>(
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'routines' | 'progress' | 'plugins'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
@@ -100,6 +101,13 @@ function Dashboard() {
             Progress
           </Button>
           <Button
+            variant={view === 'plugins' ? 'primary' : 'outline'}
+            onClick={() => setView('plugins')}
+            size="sm"
+          >
+            Plugins
+          </Button>
+          <Button
             variant={focusModeActive ? 'primary' : 'outline'}
             onClick={() => setFocusModeActive(!focusModeActive)}
             size="sm"
@@ -131,6 +139,7 @@ function Dashboard() {
               {view === 'agenda' && <AgendaView />}
               {view === 'routines' && <RoutineManager />}
               {view === 'progress' && <ProgressDisplay />}
+              {view === 'plugins' && <PluginStore />}
             </div>
           </div>
           <div className="space-y-6">
