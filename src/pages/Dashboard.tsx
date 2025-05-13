@@ -6,7 +6,6 @@ import { Calendar } from '../components/Calendar';
 import { PomodoroTimer } from '../components/PomodoroTimer';
 import { TimeTracker } from '../components/TimeTracker';
 import { DashboardSummary } from '../components/DashboardSummary';
-import { UserPreferences } from '../components/UserPreferences';
 import { HabitTracker } from '../components/HabitTracker';
 import { FocusMode } from '../components/FocusMode';
 import { MindMap } from '../components/MindMap';
@@ -18,7 +17,7 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Settings, Star } from 'lucide-react';
+import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star } from 'lucide-react';
 
 function Dashboard() {
   const { preferences } = useUserStore();
@@ -111,9 +110,6 @@ function Dashboard() {
             </div>
             <div className="p-4">
               <TimeTracker />
-            </div>
-            <div className="p-4">
-              <UserPreferences />
             </div>
           </div>
 
