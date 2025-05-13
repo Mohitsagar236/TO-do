@@ -44,6 +44,78 @@ export interface Database {
           user_id?: string
         }
       }
+      task_shares: {
+        Row: {
+          id: string
+          task_id: string
+          user_id: string
+          permission: 'view' | 'edit'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          user_id: string
+          permission: 'view' | 'edit'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          user_id?: string
+          permission?: 'view' | 'edit'
+          created_at?: string
+        }
+      }
+      task_assignments: {
+        Row: {
+          id: string
+          task_id: string
+          assigned_to: string
+          assigned_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          assigned_to: string
+          assigned_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          assigned_to?: string
+          assigned_by?: string
+          created_at?: string
+        }
+      }
+      task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          user_id: string
+          content: string
+          mentions: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          user_id: string
+          content: string
+          mentions?: string[]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          user_id?: string
+          content?: string
+          mentions?: string[]
+          created_at?: string
+        }
+      }
     }
   }
 }

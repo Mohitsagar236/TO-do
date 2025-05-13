@@ -9,6 +9,8 @@ export interface Task {
   priority: Priority;
   category: string;
   createdAt: Date;
+  assignedTo?: User;
+  sharedWith?: User[];
 }
 
 export interface Category {
@@ -22,4 +24,30 @@ export interface User {
   email: string;
   name: string;
   isPremium: boolean;
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  user: User;
+  content: string;
+  mentions: string[];
+  createdAt: Date;
+}
+
+export interface TaskShare {
+  id: string;
+  taskId: string;
+  userId: string;
+  permission: 'view' | 'edit';
+  createdAt: Date;
+}
+
+export interface TaskAssignment {
+  id: string;
+  taskId: string;
+  assignedTo: string;
+  assignedBy: string;
+  createdAt: Date;
 }
