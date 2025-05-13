@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Habit, HabitCompletion, HabitStreak } from '../types';
+import { Habit, HabitCompletion } from '../types';
 import { supabase } from '../lib/supabase';
 import { useUserStore } from './userStore';
 import { addDays, isSameDay, startOfDay } from 'date-fns';
@@ -8,7 +8,6 @@ import { addDays, isSameDay, startOfDay } from 'date-fns';
 interface HabitStore {
   habits: Habit[];
   completions: { [habitId: string]: HabitCompletion[] };
-  streaks: { [habitId: string]: HabitStreak };
   fetchHabits: () => Promise<void>;
   addHabit: (habit: Omit<Habit, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
   archiveHabit: (id: string) => Promise<void>;
@@ -23,7 +22,6 @@ export const useHabitStore = create<HabitStore>()(
     (set, get) => ({
       habits: [],
       completions: {},
-      streaks: {},
 
       fetchHabits: async () => {
         const user = useUserStore.getState().user;
@@ -35,14 +33,20 @@ export const useHabitStore = create<HabitStore>()(
           .is('archived_at', null)
           .order('created_at', { ascending: false });
 
-        if (habitsError) throw habitsError;
+        if (habitsError) {
+          console.error('Error fetching habits:', habitsError);
+          throw habitsError;
+        }
 
         const { data: completions, error: completionsError } = await supabase
           .from('habit_completions')
           .select('*')
           .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-        if (completionsError) throw completionsError;
+        if (completionsError) {
+          console.error('Error fetching completions:', completionsError);
+          throw completionsError;
+        }
 
         const completionsByHabit = completions.reduce((acc, completion) => {
           if (!acc[completion.habit_id]) {
@@ -72,7 +76,7 @@ export const useHabitStore = create<HabitStore>()(
 
         const { data, error } = await supabase
           .from('habits')
-          .insert([{
+          .insert({
             name: habit.name,
             description: habit.description,
             frequency: habit.frequency,
@@ -82,12 +86,12 @@ export const useHabitStore = create<HabitStore>()(
             reminder_time: habit.reminderTime,
             user_id: user.id,
             created_at: new Date().toISOString(),
-          }])
+          })
           .select()
           .single();
 
         if (error) {
-          console.error('Supabase error:', error);
+          console.error('Error adding habit:', error);
           throw error;
         }
 
@@ -109,7 +113,10 @@ export const useHabitStore = create<HabitStore>()(
           .update({ archived_at: new Date().toISOString() })
           .eq('id', id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error archiving habit:', error);
+          throw error;
+        }
 
         set(state => ({
           habits: state.habits.filter(habit => habit.id !== id),
@@ -122,7 +129,10 @@ export const useHabitStore = create<HabitStore>()(
           .update(updates)
           .eq('id', id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error updating habit:', error);
+          throw error;
+        }
 
         set(state => ({
           habits: state.habits.map(habit =>
@@ -147,24 +157,33 @@ export const useHabitStore = create<HabitStore>()(
         if (existingCompletion) {
           const { error } = await supabase
             .from('habit_completions')
-            .update({ value, notes })
+            .update({
+              value,
+              notes,
+            })
             .eq('id', existingCompletion.id);
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error updating completion:', error);
+            throw error;
+          }
         } else {
           const { data, error } = await supabase
             .from('habit_completions')
-            .insert([{
+            .insert({
               habit_id: habitId,
               user_id: user.id,
               date: today.toISOString(),
               value,
               notes,
-            }])
+            })
             .select()
             .single();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error adding completion:', error);
+            throw error;
+          }
 
           set(state => ({
             completions: {
