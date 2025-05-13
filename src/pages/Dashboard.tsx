@@ -17,7 +17,7 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star } from 'lucide-react';
+import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft } from 'lucide-react';
 
 function Dashboard() {
   const { preferences } = useUserStore();
@@ -27,6 +27,7 @@ function Dashboard() {
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     checkAndExecuteRoutines();
@@ -47,13 +48,12 @@ function Dashboard() {
   ] as const;
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-6">
+    <div className="container mx-auto max-w-7xl p-4 lg:p-6 space-y-6">
       <DashboardSummary />
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Left Column - Main Content */}
-        <div className="xl:col-span-3 space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Main Content */}
+        <div className="xl:col-span-9 space-y-6">
           {/* View Selector */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
             <div className="flex flex-wrap gap-2">
@@ -102,20 +102,41 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column - Sidebar */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm divide-y divide-gray-200 dark:divide-gray-700">
-            <div className="p-4">
-              <PomodoroTimer />
-            </div>
-            <div className="p-4">
-              <TimeTracker />
-            </div>
-          </div>
+        {/* Right Sidebar */}
+        <div className={`xl:col-span-3 transition-all duration-300 ${sidebarCollapsed ? 'xl:col-span-1' : 'xl:col-span-3'}`}>
+          <div className="sticky top-4 space-y-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="absolute -left-3 top-1/2 transform -translate-y-1/2 hidden xl:flex"
+            >
+              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
 
-          {/* Progress Display */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
-            <ProgressDisplay />
+            <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden transition-all duration-300 ${
+              sidebarCollapsed ? 'xl:w-16' : ''
+            }`}>
+              {!sidebarCollapsed && (
+                <>
+                  <div className="p-4 border-b dark:border-gray-700">
+                    <PomodoroTimer />
+                  </div>
+                  <div className="p-4 border-b dark:border-gray-700">
+                    <TimeTracker />
+                  </div>
+                  <div className="p-4">
+                    <ProgressDisplay />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {!sidebarCollapsed && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+                <RoutineManager />
+              </div>
+            )}
           </div>
         </div>
       </div>
