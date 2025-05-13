@@ -72,11 +72,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
             user_id,
             role,
             joined_at,
-            users (
+            user:user_id (
               id,
               email,
-              name,
-              avatar_url
+              raw_user_meta_data->name,
+              raw_user_meta_data->avatar_url
             )
           )
         `)
@@ -90,10 +90,10 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           createdAt: new Date(team.created_at),
           members: team.team_members.map((member: any) => ({
             id: member.id,
-            name: member.users.name,
-            email: member.users.email,
+            name: member.user.raw_user_meta_data.name,
+            email: member.user.email,
             role: member.role,
-            avatarUrl: member.users.avatar_url,
+            avatarUrl: member.user.raw_user_meta_data.avatar_url,
             joinedAt: new Date(member.joined_at),
           })),
         })),
@@ -146,8 +146,9 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
 
   inviteMember: async (teamId, email, role) => {
     try {
+      // Get user from auth.users instead of users table
       const { data: userData, error: userError } = await supabase
-        .from('users')
+        .from('auth.users')
         .select('id')
         .eq('email', email)
         .single();
@@ -212,10 +213,10 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         .from('team_activities')
         .select(`
           *,
-          users (
+          user:user_id (
             id,
-            name,
-            avatar_url
+            raw_user_meta_data->name,
+            raw_user_meta_data->avatar_url
           )
         `)
         .eq('team_id', teamId)
@@ -228,9 +229,9 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         activities: data.map((activity: any) => ({
           id: activity.id,
           user: {
-            id: activity.users.id,
-            name: activity.users.name,
-            avatarUrl: activity.users.avatar_url,
+            id: activity.user.id,
+            name: activity.user.raw_user_meta_data.name,
+            avatarUrl: activity.user.raw_user_meta_data.avatar_url,
           },
           action: activity.action,
           entityType: activity.entity_type,
