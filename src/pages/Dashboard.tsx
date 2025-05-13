@@ -10,12 +10,13 @@ import { UserPreferences } from '../components/UserPreferences';
 import { HabitTracker } from '../components/HabitTracker';
 import { FocusMode } from '../components/FocusMode';
 import { MindMap } from '../components/MindMap';
+import { AgendaView } from '../components/AgendaView';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 
 function Dashboard() {
   const { preferences } = useUserStore();
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap'>(
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
@@ -63,6 +64,13 @@ function Dashboard() {
             Mind Map
           </Button>
           <Button
+            variant={view === 'agenda' ? 'primary' : 'outline'}
+            onClick={() => setView('agenda')}
+            size="sm"
+          >
+            Agenda
+          </Button>
+          <Button
             variant={focusModeActive ? 'primary' : 'outline'}
             onClick={() => setFocusModeActive(!focusModeActive)}
             size="sm"
@@ -91,6 +99,7 @@ function Dashboard() {
               {view === 'calendar' && <Calendar />}
               {view === 'habits' && <HabitTracker />}
               {view === 'mindmap' && <MindMap />}
+              {view === 'agenda' && <AgendaView />}
             </div>
           </div>
           <div className="space-y-6">
