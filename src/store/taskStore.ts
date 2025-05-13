@@ -176,10 +176,10 @@ export const useTaskStore = create<TaskStore>()(
           .from('task_comments')
           .select(`
             *,
-            user:user_id (
+            users!task_comments_user_id_fkey (
               id,
               email,
-              raw_user_meta_data->>name as name
+              raw_user_meta_data->name
             )
           `)
           .eq('task_id', taskId)
@@ -194,9 +194,9 @@ export const useTaskStore = create<TaskStore>()(
               ...comment,
               createdAt: new Date(comment.created_at),
               user: {
-                id: comment.user.id,
-                email: comment.user.email,
-                name: comment.user.name || comment.user.email.split('@')[0],
+                id: comment.users.id,
+                email: comment.users.email,
+                name: comment.users.name || comment.users.email.split('@')[0],
                 isPremium: false,
               },
             })),
