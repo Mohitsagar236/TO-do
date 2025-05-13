@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, Circle, Trash2 } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, MessageSquare, Share2, UserPlus } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { Task } from '../types';
 import { Button } from './ui/Button';
+import { TaskDetails } from './TaskDetails';
 import toast from 'react-hot-toast';
 
 export function TaskList() {
   const { tasks, toggleTask, deleteTask } = useTaskStore();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const handleToggleTask = async (id: string) => {
     try {
@@ -58,7 +60,10 @@ export function TaskList() {
               )}
             </button>
             <div>
-              <h3 className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+              <h3 
+                className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'} cursor-pointer`}
+                onClick={() => setSelectedTask(task)}
+              >
                 {task.title}
               </h3>
               {task.description && (
@@ -79,20 +84,49 @@ export function TaskList() {
               </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteTask(task.id)}
-            className="text-red-500 hover:text-red-700"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedTask(task)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedTask(task)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedTask(task)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <UserPlus className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeleteTask(task.id)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       ))}
       {tasks.length === 0 && (
         <p className="text-center text-gray-500 dark:text-gray-400">
           No tasks yet. Add some tasks to get started!
         </p>
+      )}
+      {selectedTask && (
+        <TaskDetails task={selectedTask} onClose={() => setSelectedTask(null)} />
       )}
     </div>
   );
