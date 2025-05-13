@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from './Button';
 import { useTaskStore } from '../../store/taskStore';
 import { Priority } from '../../types';
+import { Wand2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function TaskForm() {
@@ -12,6 +13,8 @@ export function TaskForm() {
   const [category, setCategory] = useState('personal');
   const [dueDate, setDueDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,20 +49,91 @@ export function TaskForm() {
     }
   };
 
+  const analyzePriority = async () => {
+    if (!title && !description) {
+      toast.error('Please enter task details first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch('/api/analyze-priority', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
+
+      const data = await response.json();
+      setPriority(data.priority);
+      if (data.suggestedDueDate) {
+        setDueDate(data.suggestedDueDate);
+      }
+      if (data.suggestedCategory) {
+        setCategory(data.suggestedCategory);
+      }
+
+      toast.success('Task analyzed and suggestions applied');
+    } catch (error) {
+      toast.error('Failed to analyze task');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const generateTasksFromNotes = async () => {
+    if (!notes.trim()) {
+      toast.error('Please enter some notes to analyze');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch('/api/extract-tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      });
+
+      const tasks = await response.json();
+      for (const task of tasks) {
+        await addTask(task);
+      }
+
+      setNotes('');
+      toast.success(`${tasks.length} tasks extracted from notes`);
+    } catch (error) {
+      toast.error('Failed to extract tasks from notes');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Title
         </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          placeholder="Enter task title"
-        />
+        <div className="mt-1 flex gap-2">
+          <input
+            type="text"
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Enter task title"
+          />
+          <Button
+            type="button"
+            onClick={analyzePriority}
+            disabled={isAnalyzing}
+            variant="outline"
+            className="flex-shrink-0"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            Analyze
+          </Button>
+        </div>
       </div>
 
       <div>
@@ -121,6 +195,32 @@ export function TaskForm() {
             onChange={(e) => setDueDate(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Generate Tasks from Notes
+        </label>
+        <div className="mt-1 space-y-2">
+          <textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={4}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            placeholder="Paste your notes here to automatically extract tasks..."
+          />
+          <Button
+            type="button"
+            onClick={generateTasksFromNotes}
+            disabled={isAnalyzing || !notes.trim()}
+            variant="secondary"
+            className="w-full"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            Extract Tasks from Notes
+          </Button>
         </div>
       </div>
 
