@@ -43,11 +43,24 @@ function Dashboard() {
 
   const handleAddTask = async (taskData: any) => {
     try {
+      // Ensure proper date handling
+      let due_date = null;
+      if (taskData.dueDate) {
+        // If it's already an ISO string, use it directly
+        if (typeof taskData.dueDate === 'string') {
+          due_date = taskData.dueDate;
+        }
+        // If it's a Date object, convert to ISO string
+        else if (taskData.dueDate instanceof Date) {
+          due_date = taskData.dueDate.toISOString();
+        }
+      }
+
       await addTask({
         ...taskData,
         completed: false,
         status: 'todo',
-        due_date: taskData.dueDate instanceof Date ? taskData.dueDate.toISOString() : null
+        due_date
       });
       toast.success('Task added successfully!');
     } catch (error) {
