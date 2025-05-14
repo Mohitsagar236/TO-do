@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, Circle, Trash2, MessageSquare, Share2, UserPlus, Clock, Tag, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, MessageSquare, Share2, UserPlus, Clock, Tag, AlertCircle, Filter, SortAsc, List } from 'lucide-react';
 import { useTaskStore } from '../store/taskStore';
 import { Task } from '../types';
 import { Button } from './ui/Button';
@@ -12,7 +12,7 @@ export function TaskList() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'created'>('dueDate');
-  
+
   const handleToggleTask = async (id: string) => {
     try {
       await toggleTask(id);
@@ -63,45 +63,104 @@ export function TaskList() {
     }
   });
 
+  const taskStats = {
+    total: tasks.length,
+    completed: tasks.filter(t => t.completed).length,
+    active: tasks.filter(t => !t.completed).length,
+    highPriority: tasks.filter(t => t.priority === 'high' && !t.completed).length
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4 pb-4 border-b dark:border-gray-700">
-        <div className="flex gap-2">
-          <Button
-            variant={filter === 'all' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === 'active' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('active')}
-          >
-            Active
-          </Button>
-          <Button
-            variant={filter === 'completed' ? 'primary' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('completed')}
-          >
-            Completed
-          </Button>
+      {/* Stats Bar */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">Total Tasks</p>
+              <p className="text-2xl font-bold">{taskStats.total}</p>
+            </div>
+            <List className="w-8 h-8 text-white/80" />
+          </div>
         </div>
-        <div className="flex gap-2 ml-auto">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-          >
-            <option value="dueDate">Sort by Due Date</option>
-            <option value="priority">Sort by Priority</option>
-            <option value="created">Sort by Created</option>
-          </select>
+        
+        <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">Completed</p>
+              <p className="text-2xl font-bold">{taskStats.completed}</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">Active</p>
+              <p className="text-2xl font-bold">{taskStats.active}</p>
+            </div>
+            <Clock className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-xl text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm opacity-90">High Priority</p>
+              <p className="text-2xl font-bold">{taskStats.highPriority}</p>
+            </div>
+            <AlertCircle className="w-8 h-8 text-white/80" />
+          </div>
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <div className="flex gap-2">
+              <Button
+                variant={filter === 'all' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+              >
+                All ({taskStats.total})
+              </Button>
+              <Button
+                variant={filter === 'active' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('active')}
+              >
+                Active ({taskStats.active})
+              </Button>
+              <Button
+                variant={filter === 'completed' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('completed')}
+              >
+                Completed ({taskStats.completed})
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 ml-auto">
+            <SortAsc className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+            >
+              <option value="dueDate">Sort by Due Date</option>
+              <option value="priority">Sort by Priority</option>
+              <option value="created">Sort by Created</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Task List */}
       <div className="space-y-4">
         {sortedTasks.map((task) => (
           <div
