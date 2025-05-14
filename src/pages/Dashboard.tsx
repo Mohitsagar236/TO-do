@@ -17,7 +17,7 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Trophy, Target, TrendingUp } from 'lucide-react';
+import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap } from 'lucide-react';
 
 function Dashboard() {
   const { preferences, subscription } = useUserStore();
@@ -40,150 +40,72 @@ function Dashboard() {
 
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'team';
 
+  const viewOptions = [
+    { id: 'list', label: 'List', icon: ListTodo, color: 'from-blue-500 to-blue-600' },
+    { id: 'kanban', label: 'Kanban', icon: LayoutGrid, color: 'from-green-500 to-green-600' },
+    { id: 'calendar', label: 'Calendar', icon: CalendarIcon, color: 'from-purple-500 to-purple-600' },
+    { id: 'habits', label: 'Habits', icon: Star, color: 'from-yellow-500 to-yellow-600', premium: true },
+    { id: 'mindmap', label: 'Mind Map', icon: GitBranch, color: 'from-red-500 to-red-600', premium: true },
+    { id: 'agenda', label: 'Agenda', icon: Clock, color: 'from-indigo-500 to-indigo-600' },
+  ];
+
   return (
     <div className="container mx-auto max-w-7xl p-4 lg:p-6 space-y-6">
-      {/* Premium Features Banner */}
-      {!isPremium && (
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4 rounded-lg shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Zap className="w-8 h-8" />
-              <div>
-                <h3 className="text-lg font-semibold">Unlock Premium Features</h3>
-                <p className="text-sm opacity-90">Get access to AI-powered insights, unlimited projects, and more!</p>
-              </div>
-            </div>
-            <Button
-              onClick={() => window.location.href = '/pricing'}
-              className="bg-white text-purple-600 hover:bg-purple-50"
-            >
-              Upgrade Now
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">Tasks Completed</p>
-              <h3 className="text-3xl font-bold">24</h3>
-            </div>
-            <Trophy className="w-12 h-12 opacity-80" />
-          </div>
-          <div className="mt-4">
-            <div className="w-full bg-blue-400 rounded-full h-2">
-              <div className="bg-white rounded-full h-2 w-3/4"></div>
-            </div>
-            <p className="text-sm mt-2">75% of weekly goal</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">Focus Time</p>
-              <h3 className="text-3xl font-bold">3.5h</h3>
-            </div>
-            <Clock className="w-12 h-12 opacity-80" />
-          </div>
-          <p className="text-sm mt-4">↑ 15% from last week</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">Productivity Score</p>
-              <h3 className="text-3xl font-bold">92</h3>
-            </div>
-            <Target className="w-12 h-12 opacity-80" />
-          </div>
-          <p className="text-sm mt-4">Top 5% of users</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-80">Current Streak</p>
-              <h3 className="text-3xl font-bold">7</h3>
-            </div>
-            <TrendingUp className="w-12 h-12 opacity-80" />
-          </div>
-          <p className="text-sm mt-4">Personal best!</p>
-        </div>
-      </div>
+      <DashboardSummary />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Main Content */}
         <div className="xl:col-span-9 space-y-6">
           {/* View Selector */}
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'list', label: 'List', icon: ListTodo },
-                { id: 'kanban', label: 'Kanban', icon: LayoutGrid },
-                { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
-                { id: 'habits', label: 'Habits', icon: Star, premium: true },
-                { id: 'mindmap', label: 'Mind Map', icon: GitBranch, premium: true },
-                { id: 'agenda', label: 'Agenda', icon: Clock },
-              ].map((viewOption) => {
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {viewOptions.map((viewOption) => {
                 const Icon = viewOption.icon;
                 const isDisabled = viewOption.premium && !isPremium;
+                const isActive = view === viewOption.id;
+                
                 return (
                   <Button
                     key={viewOption.id}
-                    variant={view === viewOption.id ? 'primary' : 'outline'}
                     onClick={() => !isDisabled && setView(viewOption.id as any)}
                     disabled={isDisabled}
-                    className="flex items-center"
+                    className={`
+                      relative h-20 flex flex-col items-center justify-center gap-2
+                      ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
+                      ${isDisabled ? 'opacity-60' : ''}
+                      rounded-xl transition-all duration-200
+                    `}
                   >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {viewOption.label}
-                    {isDisabled && <Zap className="w-3 h-3 ml-2 text-yellow-500" />}
+                    <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
+                    <span className="text-sm">{viewOption.label}</span>
+                    {isDisabled && (
+                      <div className="absolute top-2 right-2">
+                        <Zap className="w-4 h-4 text-yellow-500" />
+                      </div>
+                    )}
                   </Button>
                 );
               })}
-              <Button
-                variant={focusModeActive ? 'primary' : 'outline'}
-                onClick={() => setFocusModeActive(!focusModeActive)}
-                className="ml-auto"
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                Focus Mode
-              </Button>
             </div>
           </div>
 
-          {/* AI Assistant (Premium Feature) */}
-          {isPremium && (
-            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-1 rounded-lg shadow-lg">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-grow">
-                    <input
-                      type="text"
-                      placeholder="Ask AI Assistant to help organize your tasks, analyze productivity, or suggest improvements..."
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
-                  <Button className="flex-shrink-0">Ask AI</Button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Focus Mode Toggle */}
+          <div className="flex justify-end">
+            <Button
+              variant={focusModeActive ? 'primary' : 'outline'}
+              onClick={() => setFocusModeActive(!focusModeActive)}
+              className="group"
+            >
+              <Activity className={`w-5 h-5 mr-2 ${focusModeActive ? 'text-white' : ''}`} />
+              <span>{focusModeActive ? 'Exit Focus Mode' : 'Enter Focus Mode'}</span>
+            </Button>
+          </div>
 
           {/* Task Form */}
           {!focusModeActive && <TaskForm />}
 
           {/* Main View */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {focusModeActive ? (
               <FocusMode />
             ) : (
@@ -211,29 +133,12 @@ function Dashboard() {
               {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
 
-            <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ${
-              sidebarCollapsed ? 'xl:w-16' : ''
-            }`}>
-              {!sidebarCollapsed && (
-                <>
-                  <div className="p-4 border-b dark:border-gray-700">
-                    <PomodoroTimer />
-                  </div>
-                  <div className="p-4 border-b dark:border-gray-700">
-                    <TimeTracker />
-                  </div>
-                  <div className="p-4">
-                    <ProgressDisplay />
-                  </div>
-                </>
-              )}
+            <div className={`transition-all duration-300 space-y-6 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+              <PomodoroTimer />
+              <TimeTracker />
+              <ProgressDisplay />
+              {isPremium && <RoutineManager />}
             </div>
-
-            {!sidebarCollapsed && isPremium && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4">
-                <RoutineManager />
-              </div>
-            )}
           </div>
         </div>
       </div>
