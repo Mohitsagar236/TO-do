@@ -50,13 +50,13 @@ function Dashboard() {
   ];
 
   return (
-    <div className="container mx-auto p-4 lg:p-6">
+    <div className="container mx-auto p-4">
       <div className="max-w-[1600px] mx-auto space-y-6">
         {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-4 sm:p-6 text-white">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Welcome back!</h1>
+              <h1 className="text-xl sm:text-2xl font-bold mb-2">Welcome back!</h1>
               <p className="opacity-90">
                 {isPremium ? (
                   <span className="flex items-center">
@@ -71,7 +71,7 @@ function Dashboard() {
             {!focusModeActive && (
               <Button
                 onClick={() => setFocusModeActive(true)}
-                className="bg-white/20 hover:bg-white/30 text-white"
+                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white"
               >
                 <Activity className="w-5 h-5 mr-2" />
                 Enter Focus Mode
@@ -83,50 +83,50 @@ function Dashboard() {
         {/* Summary Cards */}
         <DashboardSummary />
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-          {/* Main Content */}
-          <div className="xl:col-span-9 space-y-6">
-            {/* View Selector */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {viewOptions.map((viewOption) => {
-                  const Icon = viewOption.icon;
-                  const isDisabled = viewOption.premium && !isPremium;
-                  const isActive = view === viewOption.id;
-                  
-                  return (
-                    <div
-                      key={viewOption.id}
-                      className={`
-                        relative group
-                        ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-                      `}
-                      onClick={() => !isDisabled && setView(viewOption.id as any)}
-                    >
-                      <div className={`
-                        h-24 rounded-xl transition-all duration-300
-                        ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
-                        ${isDisabled ? 'opacity-60' : 'hover:scale-105'}
-                        flex flex-col items-center justify-center gap-2
-                      `}>
-                        <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
-                        <span className="text-sm font-medium">{viewOption.label}</span>
-                        {isDisabled && (
-                          <div className="absolute top-2 right-2">
-                            <Zap className="w-4 h-4 text-yellow-500" />
-                          </div>
-                        )}
+        {/* View Selector */}
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {viewOptions.map((viewOption) => {
+              const Icon = viewOption.icon;
+              const isDisabled = viewOption.premium && !isPremium;
+              const isActive = view === viewOption.id;
+              
+              return (
+                <div
+                  key={viewOption.id}
+                  className={`
+                    relative group
+                    ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                  `}
+                  onClick={() => !isDisabled && setView(viewOption.id as any)}
+                >
+                  <div className={`
+                    h-24 rounded-xl transition-all duration-300
+                    ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
+                    ${isDisabled ? 'opacity-60' : 'hover:scale-105'}
+                    flex flex-col items-center justify-center gap-2
+                  `}>
+                    <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
+                    <span className="text-sm font-medium">{viewOption.label}</span>
+                    {isDisabled && (
+                      <div className="absolute top-2 right-2">
+                        <Zap className="w-4 h-4 text-yellow-500" />
                       </div>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-full left-0 right-0 mt-2 p-2 bg-gray-900 text-white text-xs rounded-lg z-10">
-                        {viewOption.description}
-                        {isDisabled && ' (Premium)'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                    )}
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-full left-0 right-0 mt-2 p-2 bg-gray-900 text-white text-xs rounded-lg z-10">
+                    {viewOption.description}
+                    {isDisabled && ' (Premium)'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
+        {/* Main Content and Sidebar */}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="xl:col-span-9 space-y-6">
             {/* Task Form */}
             {!focusModeActive && <TaskForm onSubmit={() => {}} />}
 
@@ -147,7 +147,6 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Right Sidebar */}
           <div className={`xl:col-span-3 transition-all duration-300 ${sidebarCollapsed ? 'xl:col-span-1' : 'xl:col-span-3'}`}>
             <div className="sticky top-4 space-y-6">
               <Button
