@@ -43,16 +43,23 @@ function Dashboard() {
 
   const handleAddTask = async (taskData: any) => {
     try {
-      // Ensure proper date handling
       let due_date = null;
+      
       if (taskData.dueDate) {
-        // If it's already an ISO string, use it directly
-        if (typeof taskData.dueDate === 'string') {
+        // If it's already a valid ISO string, use it directly
+        if (typeof taskData.dueDate === 'string' && !isNaN(Date.parse(taskData.dueDate))) {
           due_date = taskData.dueDate;
         }
-        // If it's a Date object, convert to ISO string
-        else if (taskData.dueDate instanceof Date) {
+        // If it's a valid Date object with toISOString method, convert it
+        else if (taskData.dueDate instanceof Date && typeof taskData.dueDate.toISOString === 'function') {
           due_date = taskData.dueDate.toISOString();
+        }
+        // If neither, try to create a new Date object
+        else {
+          const parsedDate = new Date(taskData.dueDate);
+          if (!isNaN(parsedDate.getTime())) {
+            due_date = parsedDate.toISOString();
+          }
         }
       }
 
