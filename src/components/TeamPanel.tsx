@@ -11,6 +11,14 @@ import {
   MessageSquare,
   Clock,
   AlertCircle,
+  Calendar,
+  CheckCircle,
+  Target,
+  TrendingUp,
+  Award,
+  Star,
+  Filter,
+  Search,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -33,6 +41,8 @@ export function TeamPanel() {
   const [newTeam, setNewTeam] = useState({ name: '', description: '' });
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<'admin' | 'editor' | 'viewer'>('editor');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'editor' | 'viewer'>('all');
 
   useEffect(() => {
     fetchTeams();
@@ -62,6 +72,26 @@ export function TeamPanel() {
     } catch (error) {
       toast.error('Failed to send invitation');
     }
+  };
+
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         member.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = filterRole === 'all' || member.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
+
+  const teamStats = {
+    totalTasks: 24,
+    completedTasks: 18,
+    upcomingDeadlines: 5,
+    activeMembers: members.length,
+  };
+
+  const memberStats = {
+    admins: members.filter(m => m.role === 'admin').length,
+    editors: members.filter(m => m.role === 'editor').length,
+    viewers: members.filter(m => m.role === 'viewer').length,
   };
 
   return (
@@ -117,44 +147,65 @@ export function TeamPanel() {
             <>
               {/* Team Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm opacity-90">Tasks</p>
-                      <h3 className="text-2xl font-bold">24</h3>
-                    </div>
-                    <BarChart2 className="w-8 h-8 text-white/80" />
-                  </div>
-                </div>
-
                 <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm opacity-90">Members</p>
-                      <h3 className="text-2xl font-bold">{members.length}</h3>
+                      <p className="text-sm opacity-90">Task Progress</p>
+                      <h3 className="text-2xl font-bold">
+                        {Math.round((teamStats.completedTasks / teamStats.totalTasks) * 100)}%
+                      </h3>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-white/80" />
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-white/20 rounded-full h-2">
+                      <div
+                        className="bg-white rounded-full h-2"
+                        style={{
+                          width: `${(teamStats.completedTasks / teamStats.totalTasks) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90">Active Members</p>
+                      <h3 className="text-2xl font-bold">{teamStats.activeMembers}</h3>
                     </div>
                     <Users className="w-8 h-8 text-white/80" />
                   </div>
+                  <p className="text-sm mt-2 opacity-90">
+                    {memberStats.admins} admins • {memberStats.editors} editors
+                  </p>
                 </div>
 
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm opacity-90">Comments</p>
-                      <h3 className="text-2xl font-bold">128</h3>
+                      <p className="text-sm opacity-90">Productivity</p>
+                      <h3 className="text-2xl font-bold">92</h3>
                     </div>
-                    <MessageSquare className="w-8 h-8 text-white/80" />
+                    <TrendingUp className="w-8 h-8 text-white/80" />
                   </div>
+                  <p className="text-sm mt-2 opacity-90">
+                    15% increase this week
+                  </p>
                 </div>
 
                 <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm opacity-90">Due Soon</p>
-                      <h3 className="text-2xl font-bold">5</h3>
+                      <p className="text-sm opacity-90">Upcoming</p>
+                      <h3 className="text-2xl font-bold">{teamStats.upcomingDeadlines}</h3>
                     </div>
-                    <Clock className="w-8 h-8 text-white/80" />
+                    <Calendar className="w-8 h-8 text-white/80" />
                   </div>
+                  <p className="text-sm mt-2 opacity-90">
+                    Deadlines this week
+                  </p>
                 </div>
               </div>
 
@@ -168,10 +219,35 @@ export function TeamPanel() {
                       Invite Member
                     </Button>
                   </div>
+
+                  <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search members..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                    <select
+                      value={filterRole}
+                      onChange={(e) => setFilterRole(e.target.value as any)}
+                      className="rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="all">All Roles</option>
+                      <option value="admin">Admins</option>
+                      <option value="editor">Editors</option>
+                      <option value="viewer">Viewers</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {members.map(member => (
+                  {filteredMembers.map(member => (
                     <div key={member.id} className="p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center space-x-3">
@@ -209,6 +285,15 @@ export function TeamPanel() {
                       </div>
                     </div>
                   ))}
+
+                  {filteredMembers.length === 0 && (
+                    <div className="p-8 text-center">
+                      <Users className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No members found matching your filters
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -238,6 +323,15 @@ export function TeamPanel() {
                       </div>
                     </div>
                   ))}
+
+                  {activities.length === 0 && (
+                    <div className="p-8 text-center">
+                      <Clock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No recent activity
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
