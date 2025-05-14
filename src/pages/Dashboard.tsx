@@ -17,10 +17,13 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
+import { useTaskStore } from '../store/taskStore';
 import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Crown, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 function Dashboard() {
   const { preferences, subscription } = useUserStore();
+  const { addTask } = useTaskStore();
   const checkAndExecuteRoutines = useRoutineStore((state) => state.checkAndExecuteRoutines);
   const { fetchProgress, fetchLeaderboard } = useProgressStore();
   const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda'>(
@@ -37,6 +40,20 @@ function Dashboard() {
     const interval = setInterval(checkAndExecuteRoutines, 60000);
     return () => clearInterval(interval);
   }, [checkAndExecuteRoutines, fetchProgress, fetchLeaderboard]);
+
+  const handleAddTask = async (taskData: any) => {
+    try {
+      await addTask({
+        ...taskData,
+        completed: false,
+        status: 'todo',
+      });
+      toast.success('Task added successfully!');
+    } catch (error) {
+      console.error('Failed to add task:', error);
+      toast.error('Failed to add task');
+    }
+  };
 
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'team';
 
@@ -141,7 +158,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
           <div className="xl:col-span-9 space-y-6">
             {/* Task Form */}
-            {!focusModeActive && <TaskForm onSubmit={() => {}} />}
+            {!focusModeActive && <TaskForm onSubmit={handleAddTask} />}
 
             {/* Main View */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[600px]">
