@@ -44,7 +44,7 @@ export const useTaskStore = create<TaskStore>()(
 
           const tasks = data.map((task) => ({
             ...task,
-            dueDate: task.due_date ? new Date(task.due_date) : undefined,
+            dueDate: task.due_date ? new Date(task.due_date) : null,
             createdAt: new Date(task.created_at),
           }));
 
@@ -52,7 +52,6 @@ export const useTaskStore = create<TaskStore>()(
           return tasks;
         } catch (error) {
           console.error('Error fetching tasks:', error);
-          // Use cached data when offline
           const offlineData = useOfflineStore.getState().getOfflineData('tasks');
           set({ tasks: offlineData });
           return offlineData;
@@ -69,10 +68,10 @@ export const useTaskStore = create<TaskStore>()(
           const taskData = {
             title: task.title,
             description: task.description,
-            completed: task.completed,
+            completed: task.completed || false,
             due_date: task.dueDate ? task.dueDate.toISOString() : null,
-            priority: task.priority,
-            category: task.category,
+            priority: task.priority || 'medium',
+            category: task.category || 'personal',
             user_id: user.id,
             status: task.status || 'todo'
           };
