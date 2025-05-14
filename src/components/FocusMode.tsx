@@ -23,10 +23,10 @@ const MOTIVATIONAL_QUOTES = [
 
 interface FocusModeProps {
   taskId?: string;
-  onClose?: () => void;
+  onExit?: () => void;
 }
 
-export function FocusMode({ taskId, onClose }: FocusModeProps) {
+export function FocusMode({ taskId, onExit }: FocusModeProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [timerMinutes, setTimerMinutes] = useState(25);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -52,12 +52,14 @@ export function FocusMode({ taskId, onClose }: FocusModeProps) {
       } else if (e.key === 'r' && e.ctrlKey) {
         e.preventDefault();
         resetTimer();
+      } else if (e.key === 'Escape' && onExit) {
+        onExit();
       }
     };
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [onExit]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -169,9 +171,14 @@ export function FocusMode({ taskId, onClose }: FocusModeProps) {
             >
               {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
             </Button>
-            {onClose && (
-              <Button variant="outline" onClick={onClose}>
-                <X size={20} />
+            {onExit && (
+              <Button
+                variant="outline"
+                onClick={onExit}
+                className="text-red-500 hover:text-red-600 hover:border-red-500"
+              >
+                <X size={20} className="mr-2" />
+                Exit Focus Mode
               </Button>
             )}
           </div>

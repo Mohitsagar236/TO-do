@@ -17,7 +17,7 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Crown } from 'lucide-react';
+import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Crown, X } from 'lucide-react';
 
 function Dashboard() {
   const { preferences, subscription } = useUserStore();
@@ -68,15 +68,26 @@ function Dashboard() {
                 )}
               </p>
             </div>
-            {!focusModeActive && (
-              <Button
-                onClick={() => setFocusModeActive(true)}
-                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white"
-              >
-                <Activity className="w-5 h-5 mr-2" />
-                Enter Focus Mode
-              </Button>
-            )}
+            <Button
+              onClick={() => setFocusModeActive(!focusModeActive)}
+              className={`w-full sm:w-auto ${
+                focusModeActive 
+                  ? 'bg-red-500 hover:bg-red-600 text-white' 
+                  : 'bg-white/20 hover:bg-white/30 text-white'
+              }`}
+            >
+              {focusModeActive ? (
+                <>
+                  <X className="w-5 h-5 mr-2" />
+                  Exit Focus Mode
+                </>
+              ) : (
+                <>
+                  <Activity className="w-5 h-5 mr-2" />
+                  Enter Focus Mode
+                </>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -84,45 +95,47 @@ function Dashboard() {
         <DashboardSummary />
 
         {/* View Selector */}
-        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {viewOptions.map((viewOption) => {
-              const Icon = viewOption.icon;
-              const isDisabled = viewOption.premium && !isPremium;
-              const isActive = view === viewOption.id;
-              
-              return (
-                <div
-                  key={viewOption.id}
-                  className={`
-                    relative group
-                    ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-                  `}
-                  onClick={() => !isDisabled && setView(viewOption.id as any)}
-                >
-                  <div className={`
-                    h-24 rounded-xl transition-all duration-300
-                    ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
-                    ${isDisabled ? 'opacity-60' : 'hover:scale-105'}
-                    flex flex-col items-center justify-center gap-2
-                  `}>
-                    <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
-                    <span className="text-sm font-medium">{viewOption.label}</span>
-                    {isDisabled && (
-                      <div className="absolute top-2 right-2">
-                        <Zap className="w-4 h-4 text-yellow-500" />
-                      </div>
-                    )}
+        {!focusModeActive && (
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {viewOptions.map((viewOption) => {
+                const Icon = viewOption.icon;
+                const isDisabled = viewOption.premium && !isPremium;
+                const isActive = view === viewOption.id;
+                
+                return (
+                  <div
+                    key={viewOption.id}
+                    className={`
+                      relative group
+                      ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                    `}
+                    onClick={() => !isDisabled && setView(viewOption.id as any)}
+                  >
+                    <div className={`
+                      h-24 rounded-xl transition-all duration-300
+                      ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
+                      ${isDisabled ? 'opacity-60' : 'hover:scale-105'}
+                      flex flex-col items-center justify-center gap-2
+                    `}>
+                      <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
+                      <span className="text-sm font-medium">{viewOption.label}</span>
+                      {isDisabled && (
+                        <div className="absolute top-2 right-2">
+                          <Zap className="w-4 h-4 text-yellow-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-full left-0 right-0 mt-2 p-2 bg-gray-900 text-white text-xs rounded-lg z-10">
+                      {viewOption.description}
+                      {isDisabled && ' (Premium)'}
+                    </div>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-full left-0 right-0 mt-2 p-2 bg-gray-900 text-white text-xs rounded-lg z-10">
-                    {viewOption.description}
-                    {isDisabled && ' (Premium)'}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Content and Sidebar */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -133,7 +146,7 @@ function Dashboard() {
             {/* Main View */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[600px]">
               {focusModeActive ? (
-                <FocusMode />
+                <FocusMode onExit={() => setFocusModeActive(false)} />
               ) : (
                 <div className="p-6">
                   {view === 'list' && <TaskList />}
