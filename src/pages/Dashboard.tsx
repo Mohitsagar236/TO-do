@@ -47,6 +47,7 @@ function Dashboard() {
         ...taskData,
         completed: false,
         status: 'todo',
+        due_date: taskData.dueDate instanceof Date ? taskData.dueDate.toISOString() : null
       });
       toast.success('Task added successfully!');
     } catch (error) {
