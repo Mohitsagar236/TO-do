@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings, Volume2, VolumeX, Zap, Trophy } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useTaskStore } from '../store/taskStore';
 import { supabase } from '../lib/supabase';
+import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 
 interface PomodoroSettings {
@@ -62,7 +63,7 @@ export function PomodoroTimer() {
       setTimeLeft(settings.workDuration * 60);
       setIsBreak(false);
       playNotificationSound('work');
-      toast.success('Break complete! Time to work!', {
+      toast.success('Break complete! Time to focus!', {
         icon: '🎯',
       });
     } else {
@@ -74,6 +75,12 @@ export function PomodoroTimer() {
             end_time: new Date(),
             duration: `${settings.workDuration} minutes`,
             type: 'pomodoro',
+          });
+
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
           });
         } catch (error) {
           console.error('Failed to save time entry:', error);
@@ -106,45 +113,92 @@ export function PomodoroTimer() {
     setIsBreak(false);
   };
 
+  const progress = ((settings.workDuration * 60 - timeLeft) / (settings.workDuration * 60)) * 100;
+
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+    <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-white">
       <div className="text-center">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold dark:text-white">
+          <h2 className="text-2xl font-bold">
             {isBreak ? 'Break Time' : 'Focus Time'}
           </h2>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="dark:text-gray-300"
+            className="text-white hover:bg-white/20"
           >
             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </Button>
         </div>
-        <div className="text-4xl font-mono mb-6 dark:text-white">{formatTime(timeLeft)}</div>
-        <div className="space-x-4">
+
+        <div className="relative w-48 h-48 mx-auto mb-6">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle
+              cx="96"
+              cy="96"
+              r="88"
+              className="stroke-current text-white/20"
+              strokeWidth="12"
+              fill="none"
+            />
+            <circle
+              cx="96"
+              cy="96"
+              r="88"
+              className="stroke-current text-white"
+              strokeWidth="12"
+              fill="none"
+              strokeDasharray="553"
+              strokeDashoffset={553 - (553 * progress) / 100}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-4xl font-mono font-bold">
+              {formatTime(timeLeft)}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-center space-x-4 mb-6">
           <Button
             onClick={() => setIsRunning(!isRunning)}
             variant={isRunning ? 'outline' : 'primary'}
+            className="w-32 bg-white text-blue-600 hover:bg-blue-50"
           >
             {isRunning ? <Pause size={20} /> : <Play size={20} />}
+            <span className="ml-2">{isRunning ? 'Pause' : 'Start'}</span>
           </Button>
-          <Button onClick={handleReset} variant="outline">
+          <Button
+            variant="outline"
+            onClick={handleReset}
+            className="w-32 border-white text-white hover:bg-white/20"
+          >
             <RotateCcw size={20} />
           </Button>
-          <Button variant="outline">
-            <Settings size={20} />
-          </Button>
         </div>
-      </div>
-      {selectedTask && (
-        <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-          Current Task: {selectedTask.title}
+
+        {selectedTask && (
+          <div className="bg-white/10 rounded-lg p-3 mb-4">
+            <div className="flex items-center">
+              <Zap className="w-5 h-5 mr-2" />
+              <span className="font-medium">Current Task:</span>
+            </div>
+            <p className="mt-1 truncate">{selectedTask.title}</p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center">
+            <Trophy className="w-4 h-4 mr-1" />
+            <span>Session {sessionCount + 1}/{settings.sessionsUntilLongBreak}</span>
+          </div>
+          <div className="flex items-center">
+            <Settings className="w-4 h-4 mr-1" />
+            <span>{settings.workDuration}m Focus / {settings.breakDuration}m Break</span>
+          </div>
         </div>
-      )}
-      <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-        Session {sessionCount + 1} of {settings.sessionsUntilLongBreak}
       </div>
       <audio ref={audioRef} />
     </div>
