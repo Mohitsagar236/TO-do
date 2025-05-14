@@ -22,7 +22,7 @@ export function DashboardSummary() {
   ).length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl shadow-lg text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
