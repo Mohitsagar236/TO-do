@@ -70,22 +70,20 @@ export const useTaskStore = create<TaskStore>()(
             title: task.title,
             description: task.description,
             completed: task.completed,
-            due_date: task.dueDate?.toISOString(),
+            due_date: task.dueDate ? task.dueDate.toISOString() : null,
             priority: task.priority,
             category: task.category,
             user_id: user.id,
-            status: task.status || 'todo',
+            status: task.status || 'todo'
           };
 
           if (!isOnline) {
-            // Store change for later sync
             addPendingChange({
               type: 'create',
               entity: 'task',
               data: taskData,
             });
 
-            // Update local state
             const newTask = {
               ...taskData,
               id: Math.random().toString(36).substr(2, 9),
@@ -110,7 +108,7 @@ export const useTaskStore = create<TaskStore>()(
             tasks: [
               {
                 ...data,
-                dueDate: data.due_date ? new Date(data.due_date) : undefined,
+                dueDate: data.due_date ? new Date(data.due_date) : null,
                 createdAt: new Date(data.created_at),
               },
               ...state.tasks,

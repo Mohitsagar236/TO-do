@@ -46,11 +46,11 @@ function Dashboard() {
       const task = {
         title: taskData.title,
         description: taskData.description || '',
-        dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
         priority: taskData.priority || 'medium',
         category: taskData.category || 'personal',
-        completed: false,
-        status: 'todo'
+        status: taskData.status || 'todo',
+        completed: false
       };
 
       await addTask(task);
