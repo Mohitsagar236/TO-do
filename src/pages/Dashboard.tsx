@@ -17,7 +17,7 @@ import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap } from 'lucide-react';
+import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Crown } from 'lucide-react';
 
 function Dashboard() {
   const { preferences, subscription } = useUserStore();
@@ -41,17 +41,45 @@ function Dashboard() {
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'team';
 
   const viewOptions = [
-    { id: 'list', label: 'List', icon: ListTodo, color: 'from-blue-500 to-blue-600' },
-    { id: 'kanban', label: 'Kanban', icon: LayoutGrid, color: 'from-green-500 to-green-600' },
-    { id: 'calendar', label: 'Calendar', icon: CalendarIcon, color: 'from-purple-500 to-purple-600' },
-    { id: 'habits', label: 'Habits', icon: Star, color: 'from-yellow-500 to-yellow-600', premium: true },
-    { id: 'mindmap', label: 'Mind Map', icon: GitBranch, color: 'from-red-500 to-red-600', premium: true },
-    { id: 'agenda', label: 'Agenda', icon: Clock, color: 'from-indigo-500 to-indigo-600' },
+    { id: 'list', label: 'List', icon: ListTodo, color: 'from-blue-500 to-blue-600', description: 'Simple task list view' },
+    { id: 'kanban', label: 'Kanban', icon: LayoutGrid, color: 'from-green-500 to-green-600', description: 'Drag & drop task management' },
+    { id: 'calendar', label: 'Calendar', icon: CalendarIcon, color: 'from-purple-500 to-purple-600', description: 'Calendar view of tasks' },
+    { id: 'habits', label: 'Habits', icon: Star, color: 'from-yellow-500 to-yellow-600', premium: true, description: 'Track daily habits' },
+    { id: 'mindmap', label: 'Mind Map', icon: GitBranch, color: 'from-red-500 to-red-600', premium: true, description: 'Visual task relationships' },
+    { id: 'agenda', label: 'Agenda', icon: Clock, color: 'from-indigo-500 to-indigo-600', description: 'Timeline view of tasks' },
   ];
 
   return (
     <div className="container mx-auto p-4 lg:p-6">
       <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Welcome back!</h1>
+              <p className="opacity-90">
+                {isPremium ? (
+                  <span className="flex items-center">
+                    <Crown className="w-5 h-5 mr-2 text-yellow-300" />
+                    Premium Member
+                  </span>
+                ) : (
+                  'Free Plan'
+                )}
+              </p>
+            </div>
+            {!focusModeActive && (
+              <Button
+                onClick={() => setFocusModeActive(true)}
+                className="bg-white/20 hover:bg-white/30 text-white"
+              >
+                <Activity className="w-5 h-5 mr-2" />
+                Enter Focus Mode
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Summary Cards */}
         <DashboardSummary />
 
@@ -59,48 +87,44 @@ function Dashboard() {
           {/* Main Content */}
           <div className="xl:col-span-9 space-y-6">
             {/* View Selector */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {viewOptions.map((viewOption) => {
                   const Icon = viewOption.icon;
                   const isDisabled = viewOption.premium && !isPremium;
                   const isActive = view === viewOption.id;
                   
                   return (
-                    <Button
+                    <div
                       key={viewOption.id}
-                      onClick={() => !isDisabled && setView(viewOption.id as any)}
-                      disabled={isDisabled}
                       className={`
-                        relative h-20 flex flex-col items-center justify-center gap-2
-                        ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
-                        ${isDisabled ? 'opacity-60' : ''}
-                        rounded-xl transition-all duration-200
+                        relative group
+                        ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
                       `}
+                      onClick={() => !isDisabled && setView(viewOption.id as any)}
                     >
-                      <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
-                      <span className="text-sm">{viewOption.label}</span>
-                      {isDisabled && (
-                        <div className="absolute top-2 right-2">
-                          <Zap className="w-4 h-4 text-yellow-500" />
-                        </div>
-                      )}
-                    </Button>
+                      <div className={`
+                        h-24 rounded-xl transition-all duration-300
+                        ${isActive ? `bg-gradient-to-r ${viewOption.color} text-white` : 'bg-gray-50 dark:bg-gray-700'}
+                        ${isDisabled ? 'opacity-60' : 'hover:scale-105'}
+                        flex flex-col items-center justify-center gap-2
+                      `}>
+                        <Icon className={`w-6 h-6 ${isActive ? 'text-white' : ''}`} />
+                        <span className="text-sm font-medium">{viewOption.label}</span>
+                        {isDisabled && (
+                          <div className="absolute top-2 right-2">
+                            <Zap className="w-4 h-4 text-yellow-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-full left-0 right-0 mt-2 p-2 bg-gray-900 text-white text-xs rounded-lg z-10">
+                        {viewOption.description}
+                        {isDisabled && ' (Premium)'}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            </div>
-
-            {/* Focus Mode Toggle */}
-            <div className="flex justify-end">
-              <Button
-                variant={focusModeActive ? 'primary' : 'outline'}
-                onClick={() => setFocusModeActive(!focusModeActive)}
-                className="group"
-              >
-                <Activity className={`w-5 h-5 mr-2 ${focusModeActive ? 'text-white' : ''}`} />
-                <span>{focusModeActive ? 'Exit Focus Mode' : 'Enter Focus Mode'}</span>
-              </Button>
             </div>
 
             {/* Task Form */}
@@ -130,7 +154,7 @@ function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="absolute -left-3 top-1/2 transform -translate-y-1/2 hidden xl:flex z-10"
+                className="absolute -left-3 top-1/2 transform -translate-y-1/2 hidden xl:flex z-10 bg-white dark:bg-gray-800"
               >
                 {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </Button>
