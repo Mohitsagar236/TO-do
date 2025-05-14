@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { Task } from '../types';
 import { useTaskStore } from '../store/taskStore';
 import { Button } from './ui/Button';
-import { ZoomIn, ZoomOut, LayoutGrid, Download, Plus, Edit2, Trash2, Check } from 'lucide-react';
+import { ZoomIn, ZoomOut, LayoutGrid, Download, Plus, Edit2, Trash2, Check, GitBranch } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import toast from 'react-hot-toast';
 
@@ -343,46 +343,53 @@ export function MindMap() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setZoom(Math.min(4, zoom + 0.1))}
-            title="Zoom In"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setLayout(layout === 'radial' ? 'tree' : layout === 'tree' ? 'force' : 'radial')}
-            title="Change Layout"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            title="Export"
-          >
-            <Download className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {layout.charAt(0).toUpperCase() + layout.slice(1)} Layout
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-6 rounded-xl text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <GitBranch className="w-6 h-6 mr-2" />
+            <h2 className="text-xl font-semibold">Mind Map</h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
+              className="text-white hover:bg-white/20"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setZoom(Math.min(4, zoom + 0.1))}
+              className="text-white hover:bg-white/20"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLayout(layout === 'radial' ? 'tree' : layout === 'tree' ? 'force' : 'radial')}
+              className="text-white hover:bg-white/20"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExport}
+              className="text-white hover:bg-white/20"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="w-full h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+        className="w-full h-[600px] bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700"
       />
 
       {selectedNode && (

@@ -201,13 +201,17 @@ export function AgendaView() {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-xl text-white">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold dark:text-white">Calendar</h2>
+          <div className="flex items-center">
+            <CalendarIcon className="w-6 h-6 mr-2" />
+            <h2 className="text-xl font-semibold">Agenda</h2>
+          </div>
           <Button
             onClick={() => setIsCreating(!isCreating)}
             variant={isCreating ? 'primary' : 'outline'}
+            className="bg-white text-blue-600 hover:bg-blue-50"
           >
             <Plus className="w-4 h-4 mr-2" />
             {isCreating ? 'Cancel' : 'Block Time'}
@@ -215,85 +219,87 @@ export function AgendaView() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <div className="bg-white/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">Planned</span>
-              <Clock className="w-5 h-5 text-blue-500" />
+              <span className="text-sm opacity-90">Planned</span>
+              <Clock className="w-5 h-5 text-blue-200" />
             </div>
-            <p className="text-2xl font-semibold dark:text-white">{calculateProgress.planned}</p>
+            <p className="text-2xl font-semibold">{calculateProgress.planned}</p>
           </div>
           
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <div className="bg-white/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">Completed</span>
-              <Clock className="w-5 h-5 text-green-500" />
+              <span className="text-sm opacity-90">Completed</span>
+              <Clock className="w-5 h-5 text-green-200" />
             </div>
-            <p className="text-2xl font-semibold dark:text-white">{calculateProgress.completed}</p>
+            <p className="text-2xl font-semibold">{calculateProgress.completed}</p>
           </div>
           
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <div className="bg-white/10 p-4 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-300">Progress</span>
-              <Clock className="w-5 h-5 text-yellow-500" />
+              <span className="text-sm opacity-90">Progress</span>
+              <Clock className="w-5 h-5 text-yellow-200" />
             </div>
-            <p className="text-2xl font-semibold dark:text-white">{calculateProgress.percentage}%</p>
+            <p className="text-2xl font-semibold">{calculateProgress.percentage}%</p>
           </div>
         </div>
       </div>
 
-      <div className="h-[600px] relative">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          view={view}
-          views={[Views.WEEK, Views.DAY]}
-          selectable
-          resizable
-          draggable
-          onSelectSlot={handleSelectSlot}
-          onEventResize={handleEventResize}
-          onEventDrop={handleEventDrop}
-          min={new Date(0, 0, 0, WORK_HOURS.start, 0, 0)}
-          max={new Date(0, 0, 0, WORK_HOURS.end, 0, 0)}
-          eventPropGetter={eventStyleGetter}
-          components={{
-            toolbar: CustomToolbar,
-          }}
-          tooltipAccessor={event => `
-            ${event.title}
-            ${event.isOverdue ? '(Overdue!)' : ''}
-            ${event.project ? `\nProject: ${event.project}` : ''}
-            ${event.priority ? `\nPriority: ${event.priority}` : ''}
-          `}
-          className="rounded-lg shadow bg-white dark:bg-gray-800"
-        />
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="h-[600px] relative">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            view={view}
+            views={[Views.WEEK, Views.DAY]}
+            selectable
+            resizable
+            draggable
+            onSelectSlot={handleSelectSlot}
+            onEventResize={handleEventResize}
+            onEventDrop={handleEventDrop}
+            min={new Date(0, 0, 0, WORK_HOURS.start, 0, 0)}
+            max={new Date(0, 0, 0, WORK_HOURS.end, 0, 0)}
+            eventPropGetter={eventStyleGetter}
+            components={{
+              toolbar: CustomToolbar,
+            }}
+            tooltipAccessor={event => `
+              ${event.title}
+              ${event.isOverdue ? '(Overdue!)' : ''}
+              ${event.project ? `\nProject: ${event.project}` : ''}
+              ${event.priority ? `\nPriority: ${event.priority}` : ''}
+            `}
+            className="rounded-lg shadow bg-white dark:bg-gray-800"
+          />
 
-        {isCreating && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            <div className="bg-black text-white px-4 py-2 rounded-full text-sm">
-              Click and drag to block time
+          {isCreating && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+              <div className="bg-black text-white px-4 py-2 rounded-full text-sm">
+                Click and drag to block time
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showGoogleSync && (
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold dark:text-white">Google Calendar Sync</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Connect your Google Calendar to sync events
+                </p>
+              </div>
+              <Button onClick={() => toast.success('Google Calendar connected!')}>
+                Connect
+              </Button>
             </div>
           </div>
         )}
       </div>
-
-      {showGoogleSync && (
-        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold dark:text-white">Google Calendar Sync</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Connect your Google Calendar to sync events
-              </p>
-            </div>
-            <Button onClick={() => toast.success('Google Calendar connected!')}>
-              Connect
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
