@@ -1,70 +1,47 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, Subscription } from '../types';
-import { supabase } from '../lib/supabase';
-
-interface UserPreferences {
-  defaultView: 'list' | 'kanban' | 'calendar';
-  showCompletedTasks: boolean;
-  enableNotifications: boolean;
-  enableSounds: boolean;
-  emailNotifications: 'none' | 'important' | 'all' | 'daily' | 'weekly';
-  taskSortOrder: 'dueDate' | 'priority' | 'created';
-  defaultPriority: 'low' | 'medium' | 'high';
-  timeFormat: '12h' | '24h';
-  dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
-  language: string;
-  colorTheme: string;
-  enableEncryption: boolean;
-  enableTracking: boolean;
-}
-
-const defaultPreferences: UserPreferences = {
-  defaultView: 'list',
-  showCompletedTasks: true,
-  enableNotifications: true,
-  enableSounds: true,
-  emailNotifications: 'important',
-  taskSortOrder: 'dueDate',
-  defaultPriority: 'medium',
-  timeFormat: '12h',
-  dateFormat: 'MM/DD/YYYY',
-  language: 'en',
-  colorTheme: 'blue',
-  enableEncryption: false,
-  enableTracking: true,
-};
+import { storage } from '../lib/storage';
 
 interface UserStore {
-  user: User | null;
-  subscription: Subscription | null;
+  user: any | null;
   darkMode: boolean;
-  preferences: UserPreferences;
-  setUser: (user: User | null) => void;
-  setSubscription: (subscription: Subscription | null) => void;
+  preferences: any;
+  setUser: (user: any | null) => void;
   toggleDarkMode: () => void;
-  updatePreferences: (preferences: Partial<UserPreferences>) => void;
+  updatePreferences: (preferences: any) => void;
   resetPreferences: () => void;
-  signOut: () => Promise<void>;
-  fetchSubscription: () => Promise<void>;
+  signOut: () => void;
 }
 
 export const useUserStore = create<UserStore>()(
   persist(
-    (set, get) => ({
-      user: null,
-      subscription: null,
+    (set) => ({
+      user: storage.getUser(),
       darkMode: false,
-      preferences: defaultPreferences,
+      preferences: {
+        defaultView: 'list',
+        showCompletedTasks: true,
+        enableNotifications: true,
+        enableSounds: true,
+        emailNotifications: 'important',
+        taskSortOrder: 'dueDate',
+        defaultPriority: 'medium',
+        timeFormat: '12h',
+        dateFormat: 'MM/DD/YYYY',
+        language: 'en',
+        colorTheme: 'blue',
+        enableEncryption: false,
+        enableTracking: true,
+      },
 
-      setUser: (user) => set({ user }),
-
-      setSubscription: (subscription) => set({ subscription }),
+      setUser: (user) => {
+        storage.saveUser(user);
+        set({ user });
+      },
 
       toggleDarkMode: () => {
         set((state) => {
           const newDarkMode = !state.darkMode;
-          // Update document class for Tailwind dark mode
           if (newDarkMode) {
             document.documentElement.classList.add('dark');
           } else {
@@ -75,107 +52,41 @@ export const useUserStore = create<UserStore>()(
       },
 
       updatePreferences: (newPreferences) => {
-        set((state) => {
-          const updatedPreferences = {
+        set((state) => ({
+          preferences: {
             ...state.preferences,
             ...newPreferences,
-          };
-
-          // Save preferences to Supabase if user is logged in
-          if (state.user) {
-            supabase
-              .from('users')
-              .update({ preferences: updatedPreferences })
-              .eq('id', state.user.id)
-              .then(({ error }) => {
-                if (error) {
-                  console.error('Failed to save preferences:', error);
-                }
-              });
           }
-
-          return { preferences: updatedPreferences };
-        });
+        }));
       },
 
       resetPreferences: () => {
-        set({ preferences: defaultPreferences });
-      },
-
-      signOut: async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
         set({
-          user: null,
-          subscription: null,
-          preferences: defaultPreferences,
+          preferences: {
+            defaultView: 'list',
+            showCompletedTasks: true,
+            enableNotifications: true,
+            enableSounds: true,
+            emailNotifications: 'important',
+            taskSortOrder: 'dueDate',
+            defaultPriority: 'medium',
+            timeFormat: '12h',
+            dateFormat: 'MM/DD/YYYY',
+            language: 'en',
+            colorTheme: 'blue',
+            enableEncryption: false,
+            enableTracking: true,
+          }
         });
       },
 
-      fetchSubscription: async () => {
-        const user = get().user;
-        if (!user) return;
-
-        try {
-          const { data: subscription, error } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-          if (error) throw error;
-
-          set({ subscription });
-
-          // Also fetch user preferences
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('preferences')
-            .eq('id', user.id)
-            .single();
-
-          if (!userError && userData?.preferences) {
-            set((state) => ({
-              preferences: {
-                ...state.preferences,
-                ...userData.preferences,
-              },
-            }));
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      },
+      signOut: () => {
+        storage.clearUser();
+        set({ user: null });
+      }
     }),
     {
-      name: 'user-store',
-      partialize: (state) => ({
-        darkMode: state.darkMode,
-        preferences: state.preferences,
-      }),
+      name: 'user-store'
     }
   )
 );
-
-// Set up auth state listener
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const store = useUserStore.getState();
-
-  if (session?.user) {
-    store.setUser({
-      id: session.user.id,
-      email: session.user.email!,
-      name: session.user.user_metadata.name || session.user.email!.split('@')[0],
-      isPremium: false,
-    });
-    store.fetchSubscription();
-
-    // Apply dark mode preference
-    if (store.darkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  } else if (event === 'SIGNED_OUT') {
-    store.setUser(null);
-    store.resetPreferences();
-  }
-});
