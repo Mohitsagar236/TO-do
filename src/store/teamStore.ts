@@ -72,7 +72,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
             user_id,
             role,
             joined_at,
-            team_member_users!inner (
+            team_member_users!team_members_user_id_fkey!inner (
               id,
               email,
               name,
@@ -212,7 +212,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         .from('team_activities')
         .select(`
           *,
-          team_member_users!inner (
+          team_member_users!team_members_user_id_fkey!inner (
             id,
             name,
             avatar_url
