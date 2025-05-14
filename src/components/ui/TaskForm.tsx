@@ -10,7 +10,8 @@ const taskSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  category: z.string().optional()
+  category: z.string().optional(),
+  status: z.enum(['todo', 'in_progress', 'review', 'done']).default('todo')
 });
 
 type TaskFormData = z.infer<typeof taskSchema>;
@@ -30,7 +31,11 @@ export function TaskForm({ onSubmit, initialData }: TaskFormProps) {
     watch
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
-    defaultValues: initialData
+    defaultValues: {
+      ...initialData,
+      status: 'todo',
+      priority: 'medium'
+    }
   });
 
   const handleFormSubmit = (data: TaskFormData) => {
