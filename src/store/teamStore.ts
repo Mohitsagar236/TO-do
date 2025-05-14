@@ -116,7 +116,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           name: team.name,
           description: team.description,
           created_by: user.id,
-        }])
+        }], {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
         .select()
         .single();
 
@@ -129,7 +133,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           team_id: data.id,
           user_id: user.id,
           role: 'admin',
-        }]);
+        }], {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
       if (memberError) throw memberError;
 
@@ -158,7 +166,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
           user_id: userData.id,
           role,
           invited_by: useUserStore.getState().user?.id,
-        }]);
+        }], {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
       if (error) throw error;
 
