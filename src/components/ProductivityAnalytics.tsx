@@ -57,7 +57,6 @@ export function ProductivityAnalytics() {
     });
   }, [tasks, dateRange, selectedCategory]);
 
-  // Time Usage Data
   const timeUsageData = useMemo(() => {
     const categoryTime: { [key: string]: number } = {};
     filteredTasks.forEach((task) => {
@@ -73,7 +72,6 @@ export function ProductivityAnalytics() {
     }));
   }, [filteredTasks]);
 
-  // Task Completion Data
   const completionData = useMemo(() => {
     const days = dateRange === 'week' ? 7 : 30;
     const data = [];
@@ -95,7 +93,6 @@ export function ProductivityAnalytics() {
     return data;
   }, [filteredTasks, dateRange]);
 
-  // Productivity Score
   const productivityScore = useMemo(() => {
     const completed = filteredTasks.filter((t) => t.completed).length;
     const total = filteredTasks.length;
@@ -141,100 +138,108 @@ export function ProductivityAnalytics() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold dark:text-white">Productivity Analytics</h2>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1">
-            <Button
-              variant={dateRange === 'week' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setDateRange('week')}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-2xl font-bold">Productivity Analytics</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-2 bg-white/10 rounded-lg p-1">
+              <Button
+                variant={dateRange === 'week' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setDateRange('week')}
+                className="text-white border-white/20 hover:bg-white/20"
+              >
+                <Calendar className="w-4 h-4 mr-1" />
+                Week
+              </Button>
+              <Button
+                variant={dateRange === 'month' ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setDateRange('month')}
+                className="text-white border-white/20 hover:bg-white/20"
+              >
+                <Calendar className="w-4 h-4 mr-1" />
+                Month
+              </Button>
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="rounded-lg border-white/20 bg-white/10 text-white focus:ring-blue-500 focus:border-blue-500"
             >
-              <Calendar className="w-4 h-4 mr-1" />
-              Week
-            </Button>
+              {categories.map((category) => (
+                <option key={category} value={category} className="text-gray-900">
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </option>
+              ))}
+            </select>
             <Button
-              variant={dateRange === 'month' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setDateRange('month')}
+              variant="outline"
+              onClick={handleExport}
+              className="text-white border-white/20 hover:bg-white/20"
             >
-              <Calendar className="w-4 h-4 mr-1" />
-              Month
+              <Download className="w-4 h-4 mr-1" />
+              Export
             </Button>
           </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-          >
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-1" />
-            Export
-          </Button>
         </div>
       </div>
 
       {/* Productivity Score Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Completion Rate</p>
-              <h3 className="text-2xl font-bold dark:text-white">
+              <p className="text-sm opacity-90">Completion Rate</p>
+              <h3 className="text-2xl font-bold mt-1">
                 {productivityScore.completion.toFixed(1)}%
               </h3>
             </div>
-            <Target className="w-8 h-8 text-blue-500" />
+            <Target className="w-8 h-8 text-white/80" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">On-Time Rate</p>
-              <h3 className="text-2xl font-bold dark:text-white">
+              <p className="text-sm opacity-90">On-Time Rate</p>
+              <h3 className="text-2xl font-bold mt-1">
                 {productivityScore.onTime.toFixed(1)}%
               </h3>
             </div>
-            <Clock className="w-8 h-8 text-green-500" />
+            <Clock className="w-8 h-8 text-white/80" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-6 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Current Streak</p>
-              <h3 className="text-2xl font-bold dark:text-white">
+              <p className="text-sm opacity-90">Current Streak</p>
+              <h3 className="text-2xl font-bold mt-1">
                 {productivityScore.streak} days
               </h3>
             </div>
-            <Zap className="w-8 h-8 text-yellow-500" />
+            <Zap className="w-8 h-8 text-white/80" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-xl text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Habit Consistency</p>
-              <h3 className="text-2xl font-bold dark:text-white">
+              <p className="text-sm opacity-90">Habit Consistency</p>
+              <h3 className="text-2xl font-bold mt-1">
                 {productivityScore.habitConsistency.toFixed(1)}%
               </h3>
             </div>
-            <Award className="w-8 h-8 text-purple-500" />
+            <Award className="w-8 h-8 text-white/80" />
           </div>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Time Usage Chart */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
           <h3 className="text-lg font-semibold mb-4 dark:text-white">Time Usage by Category</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -259,7 +264,7 @@ export function ProductivityAnalytics() {
         </div>
 
         {/* Task Completion Chart */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
           <h3 className="text-lg font-semibold mb-4 dark:text-white">Task Completion Trend</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -286,7 +291,7 @@ export function ProductivityAnalytics() {
         </div>
 
         {/* Productivity Score Trend */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow col-span-2">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg col-span-1 lg:col-span-2">
           <h3 className="text-lg font-semibold mb-4 dark:text-white">Daily Productivity Score</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -308,24 +313,24 @@ export function ProductivityAnalytics() {
       </div>
 
       {/* Insights */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
         <h3 className="text-lg font-semibold mb-4 dark:text-white">Productivity Insights</h3>
         <div className="space-y-4">
           {productivityScore.completion > 80 && (
-            <div className="flex items-center text-green-500">
-              <TrendingUp className="w-5 h-5 mr-2" />
+            <div className="flex items-center text-green-500 bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+              <TrendingUp className="w-5 h-5 mr-2 flex-shrink-0" />
               <p>Great job! Your task completion rate is above 80%.</p>
             </div>
           )}
           {productivityScore.streak > 5 && (
-            <div className="flex items-center text-yellow-500">
-              <Zap className="w-5 h-5 mr-2" />
+            <div className="flex items-center text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+              <Zap className="w-5 h-5 mr-2 flex-shrink-0" />
               <p>You're on a {productivityScore.streak} day streak! Keep it up!</p>
             </div>
           )}
           {productivityScore.onTime < 50 && (
-            <div className="flex items-center text-red-500">
-              <Clock className="w-5 h-5 mr-2" />
+            <div className="flex items-center text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+              <Clock className="w-5 h-5 mr-2 flex-shrink-0" />
               <p>Try to improve your on-time completion rate for better productivity.</p>
             </div>
           )}
