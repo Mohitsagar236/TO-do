@@ -43,15 +43,17 @@ function Dashboard() {
 
   const handleAddTask = async (taskData: any) => {
     try {
-      await addTask({
+      const task = {
         title: taskData.title,
         description: taskData.description || '',
-        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : undefined,
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
         priority: taskData.priority || 'medium',
         category: taskData.category || 'personal',
         completed: false,
         status: 'todo'
-      });
+      };
+
+      await addTask(task);
       toast.success('Task added successfully!');
     } catch (error) {
       console.error('Failed to add task:', error);

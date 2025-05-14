@@ -16,12 +16,14 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'apikey': supabaseAnonKey
+      'apikey': supabaseAnonKey,
+      'Content-Type': 'application/json'
     },
     fetch: (url, options) => {
       const headers = {
         ...options?.headers,
         'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json',
         'Cache-Control': 'no-store'
       };
 
