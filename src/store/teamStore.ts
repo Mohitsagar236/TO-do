@@ -112,13 +112,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
 
       const { data, error } = await supabase
         .from('teams')
-        .insert([
-          {
-            name: team.name,
-            description: team.description,
-            created_by: user.id,
-          },
-        ])
+        .insert({
+          name: team.name,
+          description: team.description,
+          created_by: user.id,
+        })
         .select()
         .single();
 
@@ -127,13 +125,11 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
       // Add creator as admin
       const { error: memberError } = await supabase
         .from('team_members')
-        .insert([
-          {
-            team_id: data.id,
-            user_id: user.id,
-            role: 'admin',
-          },
-        ]);
+        .insert({
+          team_id: data.id,
+          user_id: user.id,
+          role: 'admin',
+        });
 
       if (memberError) throw memberError;
 
@@ -141,6 +137,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     } catch (error) {
       console.error('Error creating team:', error);
       set({ error: 'Failed to create team' });
+      throw error; // Re-throw to allow component to handle error
     }
   },
 
@@ -156,14 +153,12 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
 
       const { error } = await supabase
         .from('team_members')
-        .insert([
-          {
-            team_id: teamId,
-            user_id: userData.id,
-            role,
-            invited_by: useUserStore.getState().user?.id,
-          },
-        ]);
+        .insert({
+          team_id: teamId,
+          user_id: userData.id,
+          role,
+          invited_by: useUserStore.getState().user?.id,
+        });
 
       if (error) throw error;
 
@@ -171,6 +166,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     } catch (error) {
       console.error('Error inviting member:', error);
       set({ error: 'Failed to invite member' });
+      throw error;
     }
   },
 
@@ -187,6 +183,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     } catch (error) {
       console.error('Error updating member role:', error);
       set({ error: 'Failed to update member role' });
+      throw error;
     }
   },
 
@@ -203,6 +200,7 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
     } catch (error) {
       console.error('Error removing member:', error);
       set({ error: 'Failed to remove member' });
+      throw error;
     }
   },
 
