@@ -39,10 +39,14 @@ export function MindMap() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
 
+  // Debugging: Log tasks data
+  useEffect(() => {
+    console.log('Tasks:', tasks);
+  }, [tasks]);
+
   // Convert tasks to hierarchical structure
   useEffect(() => {
     const rootTasks = tasks.filter((task) => !task.parentTaskId);
-    const taskMap = new Map(tasks.map((task) => [task.id, task]));
 
     const buildNode = (task: Task, depth: number = 0): Node => {
       const childTasks = tasks.filter((t) => t.parentTaskId === task.id);
@@ -76,6 +80,21 @@ export function MindMap() {
     nodes.forEach(addLinks);
     setLinks(links);
   }, [tasks]);
+
+  // Debugging: Log nodes and links
+  useEffect(() => {
+    console.log('Nodes:', nodes);
+    console.log('Links:', links);
+  }, [nodes, links]);
+
+  // Debugging: Log SVG rendering
+  useEffect(() => {
+    console.log('Rendering SVG...');
+    if (!containerRef.current || nodes.length === 0) {
+      console.log('No container or nodes to render');
+      return;
+    }
+  }, [nodes]);
 
   useEffect(() => {
     if (!containerRef.current || nodes.length === 0) return;
@@ -156,9 +175,15 @@ export function MindMap() {
       .attr('class', 'node')
       .attr('cursor', 'pointer')
       .call(d3.drag<SVGGElement, Node>()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended));
+        .on('start', function (event) {
+          dragstarted(event);
+        })
+        .on('drag', function (event) {
+          dragged(event);
+        })
+        .on('end', function (event) {
+          dragended(event);
+        }));
 
     // Add circles to nodes
     node.append('circle')
@@ -352,7 +377,7 @@ export function MindMap() {
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
               className="text-white hover:bg-white/20"
@@ -360,7 +385,7 @@ export function MindMap() {
               <ZoomOut className="w-4 h-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setZoom(Math.min(4, zoom + 0.1))}
               className="text-white hover:bg-white/20"
@@ -368,7 +393,7 @@ export function MindMap() {
               <ZoomIn className="w-4 h-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => setLayout(layout === 'radial' ? 'tree' : layout === 'tree' ? 'force' : 'radial')}
               className="text-white hover:bg-white/20"
@@ -376,7 +401,7 @@ export function MindMap() {
               <LayoutGrid className="w-4 h-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={handleExport}
               className="text-white hover:bg-white/20"
