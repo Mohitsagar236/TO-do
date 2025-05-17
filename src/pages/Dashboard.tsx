@@ -13,20 +13,37 @@ import { AgendaView } from '../components/AgendaView';
 import { RoutineManager } from '../components/RoutineManager';
 import { ProgressDisplay } from '../components/ProgressDisplay';
 import { PluginStore } from '../components/PluginStore';
+import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
 import { Button } from '../components/ui/Button';
 import { useUserStore } from '../store/userStore';
 import { useRoutineStore } from '../store/routineStore';
 import { useProgressStore } from '../store/progressStore';
 import { useTaskStore } from '../store/taskStore';
-import { LayoutGrid, Calendar as CalendarIcon, ListTodo, GitBranch, Activity, Clock, Star, ChevronRight, ChevronLeft, Zap, Crown, X } from 'lucide-react';
+import { 
+  LayoutGrid, 
+  Calendar as CalendarIcon, 
+  ListTodo, 
+  GitBranch, 
+  Activity, 
+  Clock, 
+  Star, 
+  ChevronRight, 
+  ChevronLeft, 
+  Zap, 
+  Crown, 
+  PieChart,
+  X 
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import type { TaskFormData } from '../components/ui/TaskForm';
+import { Task } from '../types';
 
 function Dashboard() {
   const { preferences, subscription } = useUserStore();
   const { addTask } = useTaskStore();
   const checkAndExecuteRoutines = useRoutineStore((state) => state.checkAndExecuteRoutines);
   const { fetchProgress, fetchLeaderboard } = useProgressStore();
-  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda'>(
+  const [view, setView] = useState<'list' | 'kanban' | 'calendar' | 'habits' | 'mindmap' | 'agenda' | 'analytics'>(
     preferences.defaultView
   );
   const [focusModeActive, setFocusModeActive] = useState(false);
@@ -41,9 +58,14 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, [checkAndExecuteRoutines, fetchProgress, fetchLeaderboard]);
 
-  const handleAddTask = async (taskData: any) => {
+  const handleAddTask = async (taskData: TaskFormData) => {
+    if (!taskData.title) {
+      toast.error('Task title is required');
+      return;
+    }
+
     try {
-      const task = {
+      const task: Omit<Task, 'id' | 'createdAt'> = {
         title: taskData.title,
         description: taskData.description || '',
         dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
@@ -54,15 +76,15 @@ function Dashboard() {
       };
 
       await addTask(task);
-      toast.success('Task added successfully!');
+      toast.success('Task created successfully');
     } catch (error) {
-      console.error('Failed to add task:', error);
-      toast.error('Failed to add task');
+      console.error('Failed to create task:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create task');
+      return;
     }
   };
 
   const isPremium = subscription?.plan === 'pro' || subscription?.plan === 'team';
-
   const viewOptions = [
     { id: 'list', label: 'List', icon: ListTodo, color: 'from-blue-500 to-blue-600', description: 'Simple task list view' },
     { id: 'kanban', label: 'Kanban', icon: LayoutGrid, color: 'from-green-500 to-green-600', description: 'Drag & drop task management' },
@@ -70,6 +92,7 @@ function Dashboard() {
     { id: 'habits', label: 'Habits', icon: Star, color: 'from-yellow-500 to-yellow-600', premium: true, description: 'Track daily habits' },
     { id: 'mindmap', label: 'Mind Map', icon: GitBranch, color: 'from-red-500 to-red-600', premium: true, description: 'Visual task relationships' },
     { id: 'agenda', label: 'Agenda', icon: Clock, color: 'from-indigo-500 to-indigo-600', description: 'Timeline view of tasks' },
+    { id: 'analytics', label: 'Analytics', icon: PieChart, color: 'from-pink-500 to-pink-600', premium: true, description: 'Advanced analytics & reports' },
   ];
 
   return (
@@ -178,6 +201,7 @@ function Dashboard() {
                   {view === 'habits' && isPremium && <HabitTracker />}
                   {view === 'mindmap' && isPremium && <MindMap />}
                   {view === 'agenda' && <AgendaView />}
+                  {view === 'analytics' && <AnalyticsDashboard />}
                 </div>
               )}
             </div>

@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { storage } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 
 interface UserStore {
   user: any | null;
   darkMode: boolean;
   preferences: any;
   setUser: (user: any | null) => void;
+  validateSession: () => Promise<boolean>;
   toggleDarkMode: () => void;
   updatePreferences: (preferences: any) => void;
   resetPreferences: () => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -34,8 +36,33 @@ export const useUserStore = create<UserStore>()(
         enableTracking: true,
       },
 
+      validateSession: async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            storage.clearUser();
+            set({ user: null });
+            return false;
+          }
+          
+          // Update stored user data with latest session data
+          storage.saveUser(session.user);
+          set({ user: session.user });
+          return true;
+        } catch (error) {
+          console.error('Session validation error:', error);
+          storage.clearUser();
+          set({ user: null });
+          return false;
+        }
+      },
+
       setUser: (user) => {
-        storage.saveUser(user);
+        if (user) {
+          storage.saveUser(user);
+        } else {
+          storage.clearUser();
+        }
         set({ user });
       },
 
@@ -80,9 +107,15 @@ export const useUserStore = create<UserStore>()(
         });
       },
 
-      signOut: () => {
-        storage.clearUser();
-        set({ user: null });
+      signOut: async () => {
+        try {
+          await supabase.auth.signOut();
+          storage.clearUser();
+          set({ user: null });
+        } catch (error) {
+          console.error('Error signing out:', error);
+          throw error;
+        }
       }
     }),
     {

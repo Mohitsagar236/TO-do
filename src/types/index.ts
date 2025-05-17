@@ -34,3 +34,46 @@ export interface SubscriptionUsage {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Task related types
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: Date | null;
+  status: 'todo' | 'in_progress' | 'review' | 'done';
+  priority: 'low' | 'medium' | 'high';
+  category: string;
+  completed: boolean;
+  createdAt: Date;
+  completedAt?: Date;
+  assignedTo?: string;
+  teamId?: string;
+  tags?: Tag[];  encrypted?: boolean;
+  encryptionKey?: string;
+  exportFormat?: 'pdf' | 'excel' | null;
+  lastExportedAt?: Date;  export_format?: string; // Database field
+  last_exported_at?: string; // Database field
+  recording_url?: string;
+  recording_duration?: number; // in seconds
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  content: string;
+  createdAt: Date;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
+  mentions: string[];
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
